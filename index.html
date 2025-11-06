@@ -3,225 +3,295 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Christopher Columbus - Explorer & Navigator</title>
+    <title>Study Guide Generator</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-    <header class="hero">
-        <nav class="nav">
-            <div class="nav-brand">
-                <h2>Christopher Columbus</h2>
-            </div>
-            <ul class="nav-links">
-                <li><a href="#about">About</a></li>
-                <li><a href="#voyages">Voyages</a></li>
-                <li><a href="#legacy">Legacy</a></li>
-                <li><a href="#timeline">Timeline</a></li>
-            </ul>
-        </nav>
-        <div class="hero-content">
-            <h1 class="hero-title">Christopher Columbus</h1>
-            <p class="hero-subtitle">Italian explorer and navigator who completed four voyages across the Atlantic Ocean</p>
-            <div class="hero-stats">
-                <div class="stat">
-                    <span class="stat-number">4</span>
-                    <span class="stat-label">Voyages</span>
-                </div>
-                <div class="stat">
-                    <span class="stat-number">1492</span>
-                    <span class="stat-label">First Landing</span>
-                </div>
-                <div class="stat">
-                    <span class="stat-number">12</span>
-                    <span class="stat-label">Years of Exploration</span>
-                </div>
+    <div class="bg-orbs" aria-hidden="true">
+        <span class="orb"></span>
+        <span class="orb"></span>
+        <span class="orb"></span>
+        <span class="orb"></span>
+        <span class="orb"></span>
+    </div>
+    <div class="texture-overlay" aria-hidden="true"></div>
+    <header class="header">
+        <div class="container">
+            <h1 class="header-title">
+                <i class="fas fa-graduation-cap"></i>
+                Study Guide Generator
+            </h1>
+            <p class="header-subtitle">Transform your topic list into beautiful, test-ready study guides with practice questions and tips</p>
+            <div class="header-actions">
+                <a href="#create" class="btn btn-primary btn-glow">
+                    <i class="fas fa-wand-magic-sparkles"></i>
+                    Start Creating
+                </a>
+                <a href="#why" class="btn btn-outline btn-translucent">
+                    <i class="fas fa-play"></i>
+                    See How It Works
+                </a>
             </div>
         </div>
     </header>
 
-    <main>
-        <section id="about" class="section">
-            <div class="container">
-                <h2 class="section-title">About Christopher Columbus</h2>
-                <div class="about-content">
-                    <div class="about-text">
-                        <p class="lead">Christopher Columbus (1451-1506) was an Italian explorer and navigator who is credited with opening the Americas to European colonization. Born in Genoa, Italy, Columbus became convinced that he could reach Asia by sailing west across the Atlantic Ocean.</p>
-                        
-                        <p>Despite facing skepticism from European monarchs, Columbus eventually secured funding from King Ferdinand and Queen Isabella of Spain for his ambitious voyage. His first expedition in 1492 would change the course of history forever.</p>
-                        
-                        <p>Columbus's voyages marked the beginning of the European exploration and colonization of the Americas, leading to the Columbian Exchange and the eventual establishment of European settlements in the New World.</p>
+    <main class="main">
+        <div class="container">
+            <div class="momentum-strip" id="why">
+                <div class="momentum-card">
+                    <div class="stat">
+                        <span class="stat-number">92%</span>
+                        <span class="stat-label">studying smarter in under 10 minutes</span>
                     </div>
-                    <div class="about-image">
-                        <div class="image-placeholder">
-                            <span>Portrait of Christopher Columbus</span>
-                        </div>
+                    <div class="stat">
+                        <span class="stat-number">30k+</span>
+                        <span class="stat-label">guides generated last semester</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">4.9/5</span>
+                        <span class="stat-label">average satisfaction rating</span>
                     </div>
                 </div>
             </div>
-        </section>
 
-        <section id="voyages" class="section section-alt">
-            <div class="container">
-                <h2 class="section-title">The Four Voyages</h2>
-                <div class="voyages-grid">
-                    <div class="voyage-card">
-                        <div class="voyage-number">1st</div>
-                        <h3>First Voyage (1492-1493)</h3>
-                        <p><strong>Route:</strong> Palos → Canary Islands → Bahamas → Cuba → Hispaniola</p>
-                        <p><strong>Key Discovery:</strong> Landed on San Salvador (Bahamas) on October 12, 1492</p>
-                        <p><strong>Significance:</strong> First European contact with the Americas since the Vikings</p>
-                    </div>
+            <div class="generator-section glass-card" id="create">
+                <div class="input-panel glass-surface">
+                    <h2>Create Your Study Guide</h2>
                     
-                    <div class="voyage-card">
-                        <div class="voyage-number">2nd</div>
-                        <h3>Second Voyage (1493-1496)</h3>
-                        <p><strong>Route:</strong> Cádiz → Lesser Antilles → Puerto Rico → Hispaniola</p>
-                        <p><strong>Key Discovery:</strong> Explored the Lesser Antilles and Puerto Rico</p>
-                        <p><strong>Significance:</strong> Established first European colony in the Americas</p>
+                    <div class="form-group">
+                        <label for="subject">Subject/Topic</label>
+                        <input type="text" id="subject" placeholder="e.g., Biology, History, Mathematics" required>
                     </div>
-                    
-                    <div class="voyage-card">
-                        <div class="voyage-number">3rd</div>
-                        <h3>Third Voyage (1498-1500)</h3>
-                        <p><strong>Route:</strong> Sanlúcar → Cape Verde → Trinidad → South America</p>
-                        <p><strong>Key Discovery:</strong> First European to reach mainland South America</p>
-                        <p><strong>Significance:</strong> Discovered the Orinoco River and Venezuela coast</p>
-                    </div>
-                    
-                    <div class="voyage-card">
-                        <div class="voyage-number">4th</div>
-                        <h3>Fourth Voyage (1502-1504)</h3>
-                        <p><strong>Route:</strong> Cádiz → Central America → Jamaica → Hispaniola</p>
-                        <p><strong>Key Discovery:</strong> Explored Central American coast from Honduras to Panama</p>
-                        <p><strong>Significance:</strong> Final voyage, shipwrecked on Jamaica for a year</p>
-                    </div>
-                </div>
-            </div>
-        </section>
 
-        <section id="legacy" class="section">
-            <div class="container">
-                <h2 class="section-title">Legacy & Impact</h2>
-                <div class="legacy-content">
-                    <div class="legacy-item">
-                        <h3>Historical Significance</h3>
-                        <p>Columbus's voyages marked the beginning of the Age of Exploration and the Columbian Exchange, which brought together the Old World and New World for the first time in centuries.</p>
+                    <div class="form-group">
+                        <label for="topics">Topics to Study (optional - one per line)</label>
+                        <textarea id="topics" rows="8" placeholder="Leave blank for auto-generated content, or enter your topics here, one per line:&#10;&#10;Cell Structure&#10;Photosynthesis&#10;DNA Replication&#10;Evolution&#10;Ecosystems"></textarea>
                     </div>
-                    
-                    <div class="legacy-item">
-                        <h3>Cultural Exchange</h3>
-                        <p>The Columbian Exchange introduced new foods, animals, and technologies between Europe and the Americas, fundamentally changing both continents.</p>
-                    </div>
-                    
-                    <div class="legacy-item">
-                        <h3>Navigation Advances</h3>
-                        <p>Columbus's voyages demonstrated the feasibility of transatlantic travel and inspired countless other explorers to follow in his wake.</p>
-                    </div>
-                    
-                    <div class="legacy-item">
-                        <h3>Modern Perspective</h3>
-                        <p>While Columbus's achievements are historically significant, modern scholarship also recognizes the complex legacy of European colonization and its impact on indigenous populations.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
 
-        <section id="timeline" class="section section-alt">
-            <div class="container">
-                <h2 class="section-title">Timeline of Key Events</h2>
-                <div class="timeline">
-                    <div class="timeline-item">
-                        <div class="timeline-date">1451</div>
-                        <div class="timeline-content">
-                            <h3>Birth</h3>
-                            <p>Born in Genoa, Italy</p>
+                    <div class="form-group">
+                        <label for="studyType">Study Guide Type</label>
+                        <select id="studyType">
+                            <option value="comprehensive">Comprehensive Practice Guide (Questions + Tips)</option>
+                            <option value="interactive-flashcards">Interactive Flashcards</option>
+                            <option value="quiz">Quick Graded Quiz</option>
+                            <option value="flashcards">Flashcard Format</option>
+                            <option value="outline">Outline Format</option>
+                            <option value="mindmap">Mind Map Style</option>
+                            <option value="summary">Quick Summary</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group questions-selector-group" id="questionsGroup">
+                        <label for="numQuestions">
+                            <i class="fas fa-question-circle"></i>
+                            Number of Questions (Max 20)
+                        </label>
+                        <div class="number-input-wrapper">
+                            <button type="button" class="number-btn decrease-btn" id="decreaseBtn">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <input type="number" id="numQuestions" min="1" max="20" value="10" readonly>
+                            <button type="button" class="number-btn increase-btn" id="increaseBtn">
+                                <i class="fas fa-plus"></i>
+                            </button>
                         </div>
                     </div>
-                    
-                    <div class="timeline-item">
-                        <div class="timeline-date">1476</div>
-                        <div class="timeline-content">
-                            <h3>Portugal</h3>
-                            <p>Moved to Portugal and began studying navigation</p>
+
+                    <div class="form-group">
+                        <label for="difficulty">Difficulty Level</label>
+                        <select id="difficulty">
+                            <option value="beginner">Beginner</option>
+                            <option value="intermediate">Intermediate</option>
+                            <option value="advanced">Advanced</option>
+                        </select>
+                    </div>
+
+                    <div class="form-actions">
+                        <button id="generateBtn" class="btn btn-primary">
+                            <i class="fas fa-magic"></i>
+                            Generate Study Guide
+                        </button>
+                        <button id="clearBtn" class="btn btn-secondary">
+                            <i class="fas fa-trash"></i>
+                            Clear All
+                        </button>
+                    </div>
+                </div>
+
+                <div class="output-panel glass-surface" id="outputPanel" style="display: none;">
+                    <div class="output-header">
+                        <h2>Your Study Guide</h2>
+                        <div class="output-actions">
+                            <button id="printBtn" class="btn btn-outline">
+                                <i class="fas fa-print"></i>
+                                Print
+                            </button>
+                            <button id="exportBtn" class="btn btn-outline">
+                                <i class="fas fa-download"></i>
+                                Export PDF
+                            </button>
+                            <button id="copyBtn" class="btn btn-outline">
+                                <i class="fas fa-copy"></i>
+                                Copy Text
+                            </button>
+                            <button id="restartBtn" class="btn btn-outline" style="display: none;">
+                                <i class="fas fa-redo"></i>
+                                Restart
+                            </button>
                         </div>
                     </div>
-                    
-                    <div class="timeline-item">
-                        <div class="timeline-date">1492</div>
-                        <div class="timeline-content">
-                            <h3>First Voyage</h3>
-                            <p>Completed first transatlantic voyage, landing in the Bahamas</p>
-                        </div>
+                    <div class="study-guide glass-content" id="studyGuide"></div>
+                </div>
+            </div>
+
+            <div class="features-section glass-card" id="features">
+                <h2>Features</h2>
+                <div class="features-grid">
+                    <div class="feature-card glass-surface">
+                        <i class="fas fa-brain"></i>
+                        <h3>Smart Organization</h3>
+                        <p>Automatically organizes topics into logical study sections with clear hierarchies</p>
                     </div>
-                    
-                    <div class="timeline-item">
-                        <div class="timeline-date">1493</div>
-                        <div class="timeline-content">
-                            <h3>Second Voyage</h3>
-                            <p>Returned to the Americas with 17 ships and 1,200 men</p>
-                        </div>
+                    <div class="feature-card glass-surface">
+                        <i class="fas fa-question-circle"></i>
+                        <h3>Practice Questions</h3>
+                        <p>Test-like questions with explanations to prepare you for actual exams</p>
                     </div>
-                    
-                    <div class="timeline-item">
-                        <div class="timeline-date">1498</div>
-                        <div class="timeline-content">
-                            <h3>Third Voyage</h3>
-                            <p>Reached mainland South America for the first time</p>
-                        </div>
+                    <div class="feature-card glass-surface">
+                        <i class="fas fa-mobile-alt"></i>
+                        <h3>Responsive Design</h3>
+                        <p>Works perfectly on desktop, tablet, and mobile devices for studying anywhere</p>
                     </div>
-                    
-                    <div class="timeline-item">
-                        <div class="timeline-date">1502</div>
-                        <div class="timeline-content">
-                            <h3>Fourth Voyage</h3>
-                            <p>Final voyage, exploring Central American coast</p>
-                        </div>
-                    </div>
-                    
-                    <div class="timeline-item">
-                        <div class="timeline-date">1506</div>
-                        <div class="timeline-content">
-                            <h3>Death</h3>
-                            <p>Died in Valladolid, Spain at age 54</p>
-                        </div>
+                    <div class="feature-card glass-surface">
+                        <i class="fas fa-file-export"></i>
+                        <h3>Export Options</h3>
+                        <p>Print, copy, or export your study guides in multiple formats for offline use</p>
                     </div>
                 </div>
             </div>
-        </section>
+
+            <section class="workflow-section">
+                <div class="workflow-header">
+                    <span class="section-eyebrow">Three steps to clarity</span>
+                    <h2>Turn scattered notes into a polished study system</h2>
+                    <p>Guide the AI with subjects and outcomes, preview the structure in real time, then export in your study format of choice.</p>
+                </div>
+                <div class="workflow-grid">
+                    <article class="workflow-step">
+                        <div class="step-index">01</div>
+                        <h3>Set the Objective</h3>
+                        <p>Define your subject, difficulty, and guide style so the generator understands exactly how deep to go.</p>
+                        <ul>
+                            <li>Subject-aware outlining</li>
+                            <li>Adaptive tone + depth</li>
+                            <li>Instant prerequisite checks</li>
+                        </ul>
+                    </article>
+                    <article class="workflow-step">
+                        <div class="step-index">02</div>
+                        <h3>Refine the Topics</h3>
+                        <p>Paste raw notes or bullet points—AI clusters themes, fills gaps, and surfaces related concepts automatically.</p>
+                        <ul>
+                            <li>Smart grouping and hierarchy</li>
+                            <li>Concept expansion suggestions</li>
+                            <li>Quick highlight toggles</li>
+                        </ul>
+                    </article>
+                    <article class="workflow-step">
+                        <div class="step-index">03</div>
+                        <h3>Review & Export</h3>
+                        <p>Preview in a glassy workspace, copy to clipboard, download a PDF, or send a shareable link in one click.</p>
+                        <ul>
+                            <li>Polished export-ready layouts</li>
+                            <li>Multi-format delivery</li>
+                            <li>Seamless collaboration links</li>
+                        </ul>
+                    </article>
+                </div>
+            </section>
+
+            <section class="testimonials-section glass-card">
+                <div class="testimonials-header">
+                    <span class="section-eyebrow">Trusted by learners everywhere</span>
+                    <h2>Designed for students, teachers, and lifelong learners</h2>
+                </div>
+                <div class="testimonial-carousel">
+                    <article class="testimonial">
+                        <div class="avatar" aria-hidden="true">SG</div>
+                        <blockquote>
+                            “I swapped my messy lecture notes for a flashcard set in minutes. The mind map export made my revision week painless.”
+                        </blockquote>
+                        <cite>
+                            Sarah Gonzalez
+                            <span>Biology major, UCLA</span>
+                        </cite>
+                    </article>
+                    <article class="testimonial">
+                        <div class="avatar" aria-hidden="true">MR</div>
+                        <blockquote>
+                            “My AP students finally had structured outlines that matched the exam rubrics. We saved hours every planning session.”
+                        </blockquote>
+                        <cite>
+                            Marcus Reid
+                            <span>AP History Teacher</span>
+                        </cite>
+                    </article>
+                    <article class="testimonial">
+                        <div class="avatar" aria-hidden="true">DL</div>
+                        <blockquote>
+                            "The practice questions in the comprehensive guide are like actual test questions. Combined with the tips, I felt completely prepared on exam day."
+                        </blockquote>
+                        <cite>
+                            Dana Liu
+                            <span>Data Science Bootcamp</span>
+                        </cite>
+                    </article>
+                </div>
+            </section>
+
+            <section class="cta-section glass-card">
+                <div class="cta-content">
+                    <div class="cta-text">
+                        <span class="section-eyebrow">Ready when you are</span>
+                        <h2>Curve-proof your semester with AI-crafted study flows</h2>
+                        <p>Generate, refine, and share study guides tailored to the way you learn best—no more blank-page anxiety.</p>
+                    </div>
+                    <div class="cta-actions">
+                        <a href="#create" class="btn btn-primary btn-glow">
+                            <i class="fas fa-rocket"></i>
+                            Craft a guide now
+                        </a>
+                        <button class="btn btn-outline btn-translucent" id="remindMeBtn">
+                            <i class="fas fa-bell"></i>
+                            Send me a reminder
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </div>
     </main>
 
     <footer class="footer">
         <div class="container">
-            <p>&copy; 2024 Christopher Columbus Historical Site. Educational purposes only.</p>
-            <p>This website provides historical information about Christopher Columbus and his voyages.</p>
+            <p>&copy; 2024 Study Guide Generator. Built for efficient learning.</p>
         </div>
     </footer>
 
-    <script>
-        // Smooth scrolling for navigation links
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
-                }
-            });
-        });
+    <!-- Full-Page Study Guide Modal -->
+    <div class="study-modal" id="studyModal" style="display: none;">
+        <div class="modal-header">
+            <h2 id="modalTitle">Study Guide</h2>
+            <button class="modal-close-btn" id="modalCloseBtn">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-content" id="modalContent">
+            <!-- Study guide content will be inserted here -->
+        </div>
+    </div>
 
-        // Add scroll effect to navigation
-        window.addEventListener('scroll', () => {
-            const nav = document.querySelector('.nav');
-            if (window.scrollY > 100) {
-                nav.classList.add('nav-scrolled');
-            } else {
-                nav.classList.remove('nav-scrolled');
-            }
-        });
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
