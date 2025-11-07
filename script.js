@@ -190,9 +190,9 @@ class StudyGuideGenerator {
 
     createQuestionTemplates(topic, difficulty, subject) {
         const topicName = this.formatTopicName(topic);
-        const specializedTemplates = this.getSpecializedTemplates(topicName, subject, difficulty) || [];
+        const specializedTemplates = this.getSpecializedTemplates(topicName, subject, difficulty);
 
-        if (specializedTemplates.length > 0) {
+        if (specializedTemplates && specializedTemplates.length > 0) {
             return specializedTemplates;
         }
 
@@ -245,7 +245,6 @@ class StudyGuideGenerator {
     }
 
     getSpecializedTemplates(topicName, subject, difficulty) {
-        const normalizedSubject = (subject || '').toLowerCase();
         const topicLower = topicName.toLowerCase();
         const isChemistry = this.isChemistryTopic(topicName, subject);
 
@@ -282,26 +281,9 @@ class StudyGuideGenerator {
                     explanation: `Larger electronegativity differences create more polar bonds because electron density is drawn toward the more electronegative atom.`
                 },
                 {
-                    type: 'multiple-choice',
-                    question: `Why do ionic compounds typically have higher melting points than molecular covalent compounds?`,
-                    options: [
-                        `Strong electrostatic forces between oppositely charged ions require substantial energy to separate.`,
-                        `Ionic solids contain free electrons that move easily between ions.`,
-                        `Covalent molecules cannot form solids at room temperature.`,
-                        `Ionic compounds always contain heavier atoms than covalent compounds.`
-                    ],
-                    correctAnswer: 0,
-                    explanation: `It takes more energy to overcome the strong electrostatic attraction in an ionic lattice compared with the weaker intermolecular forces between covalent molecules.`
-                },
-                {
                     type: 'essay',
                     question: `Describe how electronegativity differences help you predict whether a bond will be ionic, polar covalent, or nonpolar covalent.`,
                     answer: `Large electronegativity differences (≈1.7 or greater) suggest ionic bonding, moderate differences create polar covalent bonds, and very small differences produce nearly nonpolar sharing of electrons.`
-                },
-                {
-                    type: 'essay',
-                    question: `Compare the particle arrangement in ionic, covalent, and metallic solids.`,
-                    answer: `Ionic solids form repeating lattices of alternating cations and anions, covalent solids share electron pairs between specific atoms or molecules, and metallic solids contain positive metal ions surrounded by a delocalized sea of electrons.`
                 }
             );
 
@@ -572,7 +554,6 @@ class StudyGuideGenerator {
             return templates;
         }
 
-        // General chemistry fallback
         const generalChemistry = [
             {
                 type: 'multiple-choice',
@@ -618,7 +599,7 @@ class StudyGuideGenerator {
                 {
                     type: 'essay',
                     question: `Describe an experiment that could confirm a key property of ${topicName}.`,
-                    answer: `Outline materials, measurements, and expected observations that would verify the defining property of ${topicName} (for example, conductivity for ionic compounds or color change for acid-base indicators).`
+                    answer: `Outline materials, measurements, and expected observations that would verify the defining property of ${topicName}.`
                 },
                 {
                     type: 'essay',
@@ -710,7 +691,7 @@ class StudyGuideGenerator {
 
         return normalizedSubject.includes('chem') || this.topicContainsAny(topicLower, chemistryKeywords);
     }
- 
+
     closeModal() {
         this.studyModal.style.display = 'none';
         document.body.style.overflow = '';
@@ -864,11 +845,11 @@ class StudyGuideGenerator {
             Object.entries(categorizedTopics).forEach(([category, topicList]) => {
                 sections.push({
                     title: category,
-                    topics: topicList.map(topic => this.generateTopicContent(topic, studyType, difficulty, subject))
+                    topics: topicList.map(topic => this.generateTopicContent(topic, studyType, difficulty))
                 });
             });
         }
- 
+
         return sections;
     }
 
@@ -898,14 +879,14 @@ class StudyGuideGenerator {
         return Object.fromEntries(Object.entries(categories).filter(([_, topics]) => topics.length > 0));
     }
 
-    generateTopicContent(topic, studyType, difficulty, subject) {
+    generateTopicContent(topic, studyType, difficulty) {
         const content = {
             title: topic,
             keyPoints: this.generateKeyPoints(topic, difficulty),
             details: this.generateDetails(topic, difficulty),
             examples: this.generateExamples(topic, difficulty),
             studyTips: this.generateStudyTips(topic, difficulty),
-            practiceQuestions: this.generatePracticeQuestions(topic, difficulty, subject)
+            practiceQuestions: this.generatePracticeQuestions(topic, difficulty, this.subjectInput.value.trim())
         };
 
         return content;
@@ -1633,4 +1614,169 @@ class StudyGuideGenerator {
                     </div>
                 </div>
             </div>
-        `
+        `;
+    }
+
+    createQuizQuestion(question, index) {
+        const letters = ['A', 'B', 'C', 'D'];
+        
+        return `
+            <div class="question-card">
+                <div class="question-number">${index + 1}</div>
+                <div class="question-text">${question.question}</div>
+                <div class="quiz-options">
+                    ${question.options.map((option, i) => `
+                        <div class="quiz-option" onclick="studyGuideGenerator.selectAnswer(${index}, ${i})">
+                            <div class="option-letter">${letters[i]}</div>
+                            <div>${option}</div>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="quiz-navigation">
+                    <div class="quiz-progress">
+                        <span>Question ${index + 1} of ${this.quizQuestions.length}</span>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${((index + 1) / this.quizQuestions.length) * 100}%"></div>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="studyGuideGenerator.nextQuizQuestion()" ${index === this.quizQuestions.length - 1 ? 'onclick="studyGuideGenerator.finishQuiz()"' : ''}>
+                        ${index === this.quizQuestions.length - 1 ? 'Finish Quiz' : 'Next Question'}
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    selectAnswer(questionIndex, optionIndex) {
+        // Remove previous selection
+        const questionCard = document.querySelector('.question-card');
+        const options = questionCard.querySelectorAll('.quiz-option');
+        options.forEach(option => option.classList.remove('selected'));
+        
+        // Add selection to clicked option
+        options[optionIndex].classList.add('selected');
+        
+        // Store answer
+        this.quizAnswers[questionIndex] = optionIndex;
+    }
+
+    nextQuizQuestion() {
+        if (this.currentQuizQuestion < this.quizQuestions.length - 1) {
+            this.currentQuizQuestion++;
+            this.updateQuizQuestion();
+        }
+    }
+
+    updateQuizQuestion() {
+        const container = document.querySelector('.quiz-container');
+        if (container) {
+            const header = this.createQuizHeader();
+            const question = this.createQuizQuestion(this.quizQuestions[this.currentQuizQuestion], this.currentQuizQuestion);
+            container.innerHTML = header + question;
+        }
+    }
+
+    finishQuiz() {
+        const score = this.calculateQuizScore();
+        this.displayQuizResults(score);
+    }
+
+    calculateQuizScore() {
+        let correct = 0;
+        this.quizQuestions.forEach((question, index) => {
+            const userAnswer = this.quizAnswers[index];
+            const correctAnswerIndex = question.options.indexOf(question.correctAnswer);
+            if (userAnswer === correctAnswerIndex) {
+                correct++;
+            }
+        });
+        
+        return {
+            correct,
+            total: this.quizQuestions.length,
+            percentage: Math.round((correct / this.quizQuestions.length) * 100)
+        };
+    }
+
+    displayQuizResults(score) {
+        let grade, gradeClass, summary;
+        
+        if (score.percentage >= 90) {
+            grade = 'A+';
+            gradeClass = 'excellent';
+            summary = 'Excellent work! You have a strong understanding of the material.';
+        } else if (score.percentage >= 80) {
+            grade = 'B+';
+            gradeClass = 'good';
+            summary = 'Good job! You understand most of the concepts well.';
+        } else if (score.percentage >= 70) {
+            grade = 'C+';
+            gradeClass = 'good';
+            summary = 'Not bad! Consider reviewing some topics for better understanding.';
+        } else {
+            grade = 'D';
+            gradeClass = 'poor';
+            summary = 'Keep studying! Review the material and try the quiz again.';
+        }
+        
+        const container = document.querySelector('.quiz-container');
+        container.innerHTML = `
+            <div class="quiz-results">
+                <div class="quiz-score ${gradeClass}">${score.percentage}%</div>
+                <div class="quiz-grade">Grade: ${grade}</div>
+                <div class="quiz-summary">${summary}</div>
+                <div class="quiz-breakdown">
+                    <div class="breakdown-item">
+                        <div class="breakdown-number">${score.correct}</div>
+                        <div class="breakdown-label">Correct</div>
+                    </div>
+                    <div class="breakdown-item">
+                        <div class="breakdown-number">${score.total - score.correct}</div>
+                        <div class="breakdown-label">Incorrect</div>
+                    </div>
+                    <div class="breakdown-item">
+                        <div class="breakdown-number">${score.total}</div>
+                        <div class="breakdown-label">Total Questions</div>
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="studyGuideGenerator.restartInteractive()">
+                    <i class="fas fa-redo"></i> Try Again
+                </button>
+            </div>
+        `;
+    }
+
+    restartInteractive() {
+        this.currentFlashcardIndex = 0;
+        this.currentQuizQuestion = 0;
+        this.quizAnswers = [];
+        this.restartBtn.style.display = 'none';
+        
+        // Regenerate the current study guide
+        this.generateStudyGuide();
+    }
+}
+
+// Initialize the application when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    window.studyGuideGenerator = new StudyGuideGenerator();
+    // Initialize question selector visibility
+    window.studyGuideGenerator.toggleQuestionSelector();
+    // Initialize button states
+    window.studyGuideGenerator.updateNumberButtons();
+});
+
+// Add CSS animations for notifications
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    
+    @keyframes slideOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+`;
+document.head.appendChild(style);
