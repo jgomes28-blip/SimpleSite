@@ -169,7 +169,164 @@ class StudyGuideGenerator {
             this.increaseBtn.disabled = current >= 20;
         }
     }
-    
+    getDesiredQuestionCount() {
+        if (this.numQuestions) {
+            const value = parseInt(this.numQuestions.value, 10);
+            if (!isNaN(value)) {
+                return Math.min(Math.max(value, 1), 20);
+            }
+        }
+
+        const difficulty = this.difficultySelect ? this.difficultySelect.value : 'intermediate';
+        switch (difficulty) {
+            case 'beginner':
+                return 4;
+            case 'advanced':
+                return 6;
+            default:
+                return 5;
+        }
+    }
+
+    createQuestionTemplates(topic, difficulty) {
+        const topicName = this.formatTopicName(topic);
+
+        const templates = [
+            {
+                type: 'multiple-choice',
+                question: `Which statement best summarizes ${topicName}?`,
+                options: [
+                    `${topicName} focuses on understanding how core principles connect and influence related ideas.`,
+                    `${topicName} is mainly a collection of trivia that does not require any interpretation.`,
+                    `${topicName} eliminates the need to evaluate evidence or examples.`,
+                    `${topicName} is only relevant to memorizing isolated definitions.`
+                ],
+                correctAnswer: 0,
+                explanation: `A strong grasp of ${topicName} means recognizing how concepts interact and build on one another.`
+            },
+            {
+                type: 'multiple-choice',
+                question: `Which activity best demonstrates ${topicName} in practice?`,
+                options: [
+                    `Analyzing a case study and applying ${topicName} to recommend a solution.`,
+                    `Repeating notes without ever testing your understanding.`,
+                    `Memorizing unrelated flashcards with no context.`,
+                    `Avoiding practice problems to save time.`
+                ],
+                correctAnswer: 0,
+                explanation: `Applying ${topicName} to real scenarios reinforces understanding and exam readiness.`
+            },
+            {
+                type: 'multiple-choice',
+                question: `Which study strategy is most effective when reviewing ${topicName}?`,
+                options: [
+                    `Break ${topicName} into smaller subtopics, map their relationships, and practice active recall.`,
+                    `Read through your notes once and rely on short-term memory.`,
+                    `Ignore feedback and focus only on what already feels easy.`,
+                    `Avoid self-testing until the night before your assessment.`
+                ],
+                correctAnswer: 0,
+                explanation: `Organizing subtopics and practicing retrieval creates long-term mastery of ${topicName}.`
+            },
+            {
+                type: 'essay',
+                question: `Explain why ${topicName} is essential for succeeding in this subject.`,
+                answer: `${topicName} provides the framework that links course concepts, helps you answer higher-order exam questions, and reveals how the subject works in real life.`
+            },
+            {
+                type: 'essay',
+                question: `Describe a real-world situation where ${topicName} is applied.`,
+                answer: `Look for news articles, lab results, or professional case studies where ${topicName} guides decisions, solves problems, or explains outcomes.`
+            },
+            {
+                type: 'essay',
+                question: `What prior knowledge should you review before diving deeper into ${topicName}?`,
+                answer: `Review the foundational vocabulary, related theories, and prerequisite math or logic skills that make ${topicName} easier to understand.`
+            }
+        ];
+
+        if (difficulty === 'advanced') {
+            templates.push({
+                type: 'essay',
+                question: `Evaluate a common misconception about ${topicName} and explain how to correct it on an exam.`,
+                answer: `State the misconception, explain why it is inaccurate, and replace it with the accurate interpretation of ${topicName} using evidence or a counter-example.`
+            });
+            templates.push({
+                type: 'multiple-choice',
+                question: `Which challenge is most common when mastering ${topicName}?`,
+                options: [
+                    `Balancing deep conceptual understanding with speed under exam conditions.`,
+                    `Avoiding feedback and studying in isolation.`,
+                    `Replacing practice questions with passive reading only.`,
+                    `Ignoring how ${topicName} connects to broader course outcomes.`
+                ],
+                correctAnswer: 0,
+                explanation: `Advanced exams require both conceptual depth and efficient execution when applying ${topicName}.`
+            });
+        }
+
+        return templates;
+    }
+
+    generateExtendedQuestion(topic, index, difficulty) {
+        const topicName = this.formatTopicName(topic);
+        const questionNumber = index + 1;
+        const prompts = [
+            {
+                type: 'essay',
+                question: `Identify an exam-style question #${questionNumber} you expect to see about ${topicName}, and outline how you would answer it.`,
+                answer: `Predict a likely prompt (definition, application, or evaluation) and draft the key points you would include when answering about ${topicName}.`
+            },
+            {
+                type: 'essay',
+                question: `Summarize the biggest insight you have gained from studying ${topicName} so far.`,
+                answer: `Explain how your understanding of ${topicName} has evolved, and how that insight influences the rest of the course.`
+            },
+            {
+                type: 'essay',
+                question: `List two exam traps related to ${topicName} and describe how you will avoid them.`,
+                answer: `Identify misunderstandings or careless mistakes people often make about ${topicName}, then create specific checkpoints to prevent them.`
+            }
+        ];
+
+        if (difficulty === 'advanced') {
+            prompts.push({
+                type: 'essay',
+                question: `Connect ${topicName} to another advanced topic and explain how they reinforce one another.`,
+                answer: `Show how mastering ${topicName} supports complex analysis, cross-topic synthesis, or research discussions within the course.`
+            });
+        }
+
+        return this.cloneQuestion(prompts[index % prompts.length]);
+    }
+
+    cloneQuestion(template) {
+        if (template.type === 'multiple-choice') {
+            return {
+                question: template.question,
+                type: 'multiple-choice',
+                options: [...template.options],
+                correctAnswer: template.correctAnswer,
+                explanation: template.explanation
+            };
+        }
+
+        return { ...template };
+    }
+
+    formatTopicName(topic) {
+        if (!topic) {
+            return 'this topic';
+        }
+
+        const trimmed = topic.trim();
+        if (!trimmed) {
+            return 'this topic';
+        }
+
+        return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+    }
+ 
     closeModal() {
         this.studyModal.style.display = 'none';
         document.body.style.overflow = '';
@@ -477,39 +634,24 @@ class StudyGuideGenerator {
     }
 
     generatePracticeQuestions(topic, difficulty) {
-        const questionTemplates = [
-            {
-                question: `What is the primary concept behind ${topic}?`,
-                type: 'conceptual',
-                answer: `The primary concept of ${topic} involves understanding its fundamental principles and how they relate to the broader field. Key aspects include identifying core mechanisms, processes, or theories that define this topic and their practical applications.`
-            },
-            {
-                question: `Which of the following best describes ${topic}?`,
-                type: 'multiple-choice',
-                options: [
-                    `A comprehensive framework for understanding core principles`,
-                    `An advanced theoretical model requiring specialized knowledge`,
-                    `A practical application method used in real-world scenarios`,
-                    `A foundational concept building upon basic principles`
-                ],
-                correctAnswer: 3,
-                explanation: `This answer is correct because ${topic} serves as a foundational building block that establishes essential knowledge for understanding more complex concepts.`
-            },
-            {
-                question: `Explain the significance of ${topic} in practical applications.`,
-                type: 'essay',
-                answer: `${topic} holds significant importance as it provides the theoretical foundation for numerous practical applications. Understanding this concept enables professionals to solve complex problems, make informed decisions, and innovate within their field. The principles underlying ${topic} can be applied across various contexts, making it a versatile and essential knowledge area.`
-            },
-            {
-                question: `What are the key differences between basic and advanced approaches to ${topic}?`,
-                type: 'comparative',
-                answer: `Basic approaches to ${topic} focus on fundamental understanding and simple applications, while advanced approaches incorporate complex theories, multiple perspectives, and sophisticated analytical techniques. Advanced study involves critical evaluation, synthesis of information, and application to complex real-world scenarios.`
-            }
-        ];
+        const desiredCount = this.getDesiredQuestionCount();
+        const baseTemplates = this.createQuestionTemplates(topic, difficulty);
+        const questions = [];
 
-        // Return 2-3 questions based on difficulty
-        const numQuestions = difficulty === 'beginner' ? 2 : difficulty === 'intermediate' ? 2 : 3;
-        return questionTemplates.slice(0, numQuestions);
+        let index = 0;
+        while (questions.length < desiredCount) {
+            let template;
+            if (index < baseTemplates.length) {
+                template = baseTemplates[index];
+            } else {
+                template = this.generateExtendedQuestion(topic, index, difficulty);
+            }
+
+            questions.push(this.cloneQuestion(template));
+            index++;
+        }
+
+        return questions;
     }
 
     displayStudyGuide(studyGuide) {
