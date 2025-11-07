@@ -868,7 +868,7 @@ class StudyGuideGenerator {
                 });
             });
         }
-
+ 
         return sections;
     }
 
