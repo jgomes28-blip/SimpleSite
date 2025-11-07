@@ -188,89 +188,456 @@ class StudyGuideGenerator {
         }
     }
 
-    createQuestionTemplates(topic, difficulty) {
+    createQuestionTemplates(topic, difficulty, subject) {
         const topicName = this.formatTopicName(topic);
+        const specializedTemplates = this.getSpecializedTemplates(topicName, subject, difficulty) || [];
+
+        if (specializedTemplates.length > 0) {
+            return specializedTemplates;
+        }
 
         const templates = [
             {
                 type: 'multiple-choice',
-                question: `Which statement best summarizes ${topicName}?`,
+                question: `Which fact about ${topicName} is correct?`,
                 options: [
-                    `${topicName} focuses on understanding how core principles connect and influence related ideas.`,
-                    `${topicName} is mainly a collection of trivia that does not require any interpretation.`,
-                    `${topicName} eliminates the need to evaluate evidence or examples.`,
-                    `${topicName} is only relevant to memorizing isolated definitions.`
+                    `${topicName} builds on prerequisite concepts and has key definitions you must memorize accurately.`,
+                    `${topicName} has no relationship to other topics in the course.`,
+                    `${topicName} is based entirely on opinion and has no factual basis.`,
+                    `${topicName} never appears on written assessments.`
                 ],
                 correctAnswer: 0,
-                explanation: `A strong grasp of ${topicName} means recognizing how concepts interact and build on one another.`
+                explanation: `${topicName} connects to other ideas in the course and requires clear, factual understanding.`
             },
             {
                 type: 'multiple-choice',
-                question: `Which activity best demonstrates ${topicName} in practice?`,
+                question: `Which question would help you check your mastery of ${topicName}?`,
                 options: [
-                    `Analyzing a case study and applying ${topicName} to recommend a solution.`,
-                    `Repeating notes without ever testing your understanding.`,
-                    `Memorizing unrelated flashcards with no context.`,
-                    `Avoiding practice problems to save time.`
+                    `Can I explain ${topicName} in my own words and apply it to a new example?`,
+                    `Can I avoid practicing ${topicName} and still succeed?`,
+                    `Can I rely only on memorizing the heading "${topicName}"?`,
+                    `Can I ignore how ${topicName} connects to exam questions?`
                 ],
                 correctAnswer: 0,
-                explanation: `Applying ${topicName} to real scenarios reinforces understanding and exam readiness.`
-            },
-            {
-                type: 'multiple-choice',
-                question: `Which study strategy is most effective when reviewing ${topicName}?`,
-                options: [
-                    `Break ${topicName} into smaller subtopics, map their relationships, and practice active recall.`,
-                    `Read through your notes once and rely on short-term memory.`,
-                    `Ignore feedback and focus only on what already feels easy.`,
-                    `Avoid self-testing until the night before your assessment.`
-                ],
-                correctAnswer: 0,
-                explanation: `Organizing subtopics and practicing retrieval creates long-term mastery of ${topicName}.`
+                explanation: `When you can teach ${topicName} using your own example, you understand it at exam level.`
             },
             {
                 type: 'essay',
-                question: `Explain why ${topicName} is essential for succeeding in this subject.`,
-                answer: `${topicName} provides the framework that links course concepts, helps you answer higher-order exam questions, and reveals how the subject works in real life.`
+                question: `Summarize the key components of ${topicName} that you must be able to explain on an assessment.`,
+                answer: `Identify the core definition of ${topicName}, list the supporting facts or formulas, and describe how to apply them to common exam scenarios.`
             },
             {
                 type: 'essay',
-                question: `Describe a real-world situation where ${topicName} is applied.`,
-                answer: `Look for news articles, lab results, or professional case studies where ${topicName} guides decisions, solves problems, or explains outcomes.`
-            },
-            {
-                type: 'essay',
-                question: `What prior knowledge should you review before diving deeper into ${topicName}?`,
-                answer: `Review the foundational vocabulary, related theories, and prerequisite math or logic skills that make ${topicName} easier to understand.`
+                question: `Create a high-yield reference sheet for ${topicName}.`,
+                answer: `Include a concise definition, the essential formulas or relationships, and one original example that shows how to use ${topicName}.`
             }
         ];
 
         if (difficulty === 'advanced') {
             templates.push({
                 type: 'essay',
-                question: `Evaluate a common misconception about ${topicName} and explain how to correct it on an exam.`,
-                answer: `State the misconception, explain why it is inaccurate, and replace it with the accurate interpretation of ${topicName} using evidence or a counter-example.`
-            });
-            templates.push({
-                type: 'multiple-choice',
-                question: `Which challenge is most common when mastering ${topicName}?`,
-                options: [
-                    `Balancing deep conceptual understanding with speed under exam conditions.`,
-                    `Avoiding feedback and studying in isolation.`,
-                    `Replacing practice questions with passive reading only.`,
-                    `Ignoring how ${topicName} connects to broader course outcomes.`
-                ],
-                correctAnswer: 0,
-                explanation: `Advanced exams require both conceptual depth and efficient execution when applying ${topicName}.`
+                question: `Compare ${topicName} to another advanced concept and explain how they reinforce each other.`,
+                answer: `Point out a related advanced topic, explain the connection, and show how mastering ${topicName} improves your reasoning or calculations for both topics.`
             });
         }
 
         return templates;
     }
 
-    generateExtendedQuestion(topic, index, difficulty) {
+    getSpecializedTemplates(topicName, subject, difficulty) {
+        const normalizedSubject = (subject || '').toLowerCase();
+        const topicLower = topicName.toLowerCase();
+        const isChemistry = this.isChemistryTopic(topicName, subject);
+
+        if (!isChemistry) {
+            return null;
+        }
+
+        const templates = [];
+
+        if (this.topicContainsAny(topicLower, ['bond', 'ionic', 'covalent', 'metallic'])) {
+            templates.push(
+                {
+                    type: 'multiple-choice',
+                    question: `Which statement correctly compares ionic and covalent bonds?`,
+                    options: [
+                        `Ionic bonds form when electrons transfer from a metal to a nonmetal, while covalent bonds share electrons between two nonmetals.`,
+                        `Ionic bonds share electron pairs between nonmetals, while covalent bonds transfer electrons from metals to nonmetals.`,
+                        `Both ionic and covalent bonds require only metallic elements.`,
+                        `Covalent bonds occur when electrons are lost and gained between metals and nonmetals.`
+                    ],
+                    correctAnswer: 0,
+                    explanation: `Ionic bonding results from electron transfer between metals and nonmetals, whereas covalent bonding involves sharing electron pairs between nonmetal atoms.`
+                },
+                {
+                    type: 'multiple-choice',
+                    question: `Which factor best predicts the polarity of a covalent bond?`,
+                    options: [
+                        `The difference in electronegativity between the two bonded atoms.`,
+                        `The total number of valence electrons present in the molecule.`,
+                        `The color of the elements involved in the bond.`,
+                        `The physical state (solid, liquid, gas) of the compound at room temperature.`
+                    ],
+                    correctAnswer: 0,
+                    explanation: `Larger electronegativity differences create more polar bonds because electron density is drawn toward the more electronegative atom.`
+                },
+                {
+                    type: 'multiple-choice',
+                    question: `Why do ionic compounds typically have higher melting points than molecular covalent compounds?`,
+                    options: [
+                        `Strong electrostatic forces between oppositely charged ions require substantial energy to separate.`,
+                        `Ionic solids contain free electrons that move easily between ions.`,
+                        `Covalent molecules cannot form solids at room temperature.`,
+                        `Ionic compounds always contain heavier atoms than covalent compounds.`
+                    ],
+                    correctAnswer: 0,
+                    explanation: `It takes more energy to overcome the strong electrostatic attraction in an ionic lattice compared with the weaker intermolecular forces between covalent molecules.`
+                },
+                {
+                    type: 'essay',
+                    question: `Describe how electronegativity differences help you predict whether a bond will be ionic, polar covalent, or nonpolar covalent.`,
+                    answer: `Large electronegativity differences (≈1.7 or greater) suggest ionic bonding, moderate differences create polar covalent bonds, and very small differences produce nearly nonpolar sharing of electrons.`
+                },
+                {
+                    type: 'essay',
+                    question: `Compare the particle arrangement in ionic, covalent, and metallic solids.`,
+                    answer: `Ionic solids form repeating lattices of alternating cations and anions, covalent solids share electron pairs between specific atoms or molecules, and metallic solids contain positive metal ions surrounded by a delocalized sea of electrons.`
+                }
+            );
+
+            if (difficulty === 'advanced') {
+                templates.push({
+                    type: 'essay',
+                    question: `Explain how lattice energy and ion size influence the strength of ionic bonds in ${topicName}.`,
+                    answer: `Higher lattice energy—favored by small, highly charged ions—produces stronger ionic bonds. Larger ions or lower charges reduce lattice energy and make the ionic compound easier to separate.`
+                });
+            }
+
+            return templates;
+        }
+
+        if (this.topicContainsAny(topicLower, ['periodic', 'trend', 'electronegativity', 'ionization', 'atomic radius'])) {
+            templates.push(
+                {
+                    type: 'multiple-choice',
+                    question: `Which periodic trend decreases from left to right across a period?`,
+                    options: [
+                        `Atomic radius`,
+                        `Electronegativity`,
+                        `Ionization energy`,
+                        `Effective nuclear charge`
+                    ],
+                    correctAnswer: 0,
+                    explanation: `From left to right, increasing effective nuclear charge pulls electrons closer, decreasing atomic radius while electronegativity and ionization energy generally increase.`
+                },
+                {
+                    type: 'multiple-choice',
+                    question: `Which statement explains why ionization energy increases across a period?`,
+                    options: [
+                        `Nucleus-electron attraction grows stronger as effective nuclear charge increases, requiring more energy to remove an electron.`,
+                        `Electrons move farther from the nucleus, making them easier to remove.`,
+                        `Additional energy levels are added, shielding the valence electrons.`,
+                        `Electron-electron repulsion decreases, so electrons are lost more easily.`
+                    ],
+                    correctAnswer: 0,
+                    explanation: `Higher effective nuclear charge across a period pulls valence electrons closer, so more energy is needed to remove them.`
+                },
+                {
+                    type: 'essay',
+                    question: `Explain the relationship between atomic radius and electronegativity across a period and down a group.`,
+                    answer: `Across a period, shrinking radius leads to stronger attraction for bonding electrons (higher electronegativity). Down a group, larger atomic radius and increased shielding reduce electronegativity.`
+                }
+            );
+
+            if (difficulty === 'advanced') {
+                templates.push({
+                    type: 'essay',
+                    question: `Predict how ionization energy changes when moving diagonally across the periodic table and justify your reasoning.`,
+                    answer: `Moving diagonally up and to the right generally increases ionization energy because effective nuclear charge increases while atomic radius decreases.`
+                });
+            }
+
+            return templates;
+        }
+
+        if (this.topicContainsAny(topicLower, ['acid', 'base', 'ph', 'titration'])) {
+            templates.push(
+                {
+                    type: 'multiple-choice',
+                    question: `Which statement describes a Bronsted-Lowry acid-base reaction?`,
+                    options: [
+                        `An acid donates a proton and a base accepts a proton.`,
+                        `An acid accepts a proton and a base donates a proton.`,
+                        `Both acids and bases donate protons simultaneously.`,
+                        `Neither acids nor bases exchange protons.`
+                    ],
+                    correctAnswer: 0,
+                    explanation: `Bronsted-Lowry theory defines acids as proton donors and bases as proton acceptors.`
+                },
+                {
+                    type: 'multiple-choice',
+                    question: `What happens at the equivalence point of a strong acid-strong base titration?`,
+                    options: [
+                        `Moles of acid equal moles of base, producing a neutral salt solution.`,
+                        `The solution becomes strongly acidic.`,
+                        `The solution becomes strongly basic immediately.`,
+                        `The reaction stops before products form.`
+                    ],
+                    correctAnswer: 0,
+                    explanation: `At equivalence, stoichiometric amounts of acid and base have reacted to form neutral products (water and a salt).`
+                },
+                {
+                    type: 'essay',
+                    question: `Describe how buffer solutions resist changes in pH and give an example related to ${topicName}.`,
+                    answer: `Buffers contain a weak acid-base conjugate pair that consumes added H⁺ or OH⁻, limiting pH change. For ${topicName}, identify the relevant conjugate pair and explain how it reacts with added acid or base.`
+                }
+            );
+
+            if (difficulty === 'advanced') {
+                templates.push({
+                    type: 'essay',
+                    question: `Explain how Ka or Kb values help compare the strength of species involved in ${topicName}.`,
+                    answer: `Larger Ka (or smaller pKa) indicates a stronger acid. For ${topicName}, analyze the numerical values to justify which side of the equilibrium is favored.`
+                });
+            }
+
+            return templates;
+        }
+
+        if (this.topicContainsAny(topicLower, ['stoichi', 'mole', 'limiting', 'yield'])) {
+            templates.push(
+                {
+                    type: 'multiple-choice',
+                    question: `What is the first step when solving a stoichiometry problem involving ${topicName}?`,
+                    options: [
+                        `Convert all given quantities to moles using molar mass or molar relationships.`,
+                        `Randomly select coefficients from the balanced equation.`,
+                        `Convert moles directly to mass without using the balanced equation.`,
+                        `Ignore the balanced chemical equation entirely.`
+                    ],
+                    correctAnswer: 0,
+                    explanation: `Stoichiometry problems begin by converting to moles so that balanced mole ratios can be applied.`
+                },
+                {
+                    type: 'multiple-choice',
+                    question: `How do you identify the limiting reagent in a reaction?`,
+                    options: [
+                        `Compare the mole ratios required by the balanced equation to the moles actually available.`,
+                        `Choose the reactant with the greatest molar mass.`,
+                        `Pick the reactant present in the largest volume.`,
+                        `Assume the reactant with the highest coefficient is limiting.`
+                    ],
+                    correctAnswer: 0,
+                    explanation: `The limiting reagent produces the smallest amount of product when stoichiometric ratios are applied to the available moles.`
+                },
+                {
+                    type: 'essay',
+                    question: `Summarize the steps for converting grams of a reactant to liters of gaseous product at STP for ${topicName}.`,
+                    answer: `Convert grams to moles, use the balanced equation to find product moles, then multiply by 22.4 L/mol (at STP) to obtain the gas volume.`
+                }
+            );
+
+            if (difficulty === 'advanced') {
+                templates.push({
+                    type: 'essay',
+                    question: `Explain how percent yield relates to limiting reactant calculations in ${topicName}.`,
+                    answer: `Percent yield compares actual product to theoretical yield from the limiting reagent. Discuss how measurement error or side reactions lower the percent yield.`
+                });
+            }
+
+            return templates;
+        }
+
+        if (this.topicContainsAny(topicLower, ['equilibrium', 'le chatelier', 'ksp', 'kc', 'kp'])) {
+            templates.push(
+                {
+                    type: 'multiple-choice',
+                    question: `According to Le Chatelier's principle, how does increasing reactant concentration affect an equilibrium system?`,
+                    options: [
+                        `The system shifts toward products to consume the added reactants.`,
+                        `The system shifts toward reactants to produce more reactants.`,
+                        `The equilibrium constant immediately changes.`,
+                        `The system becomes static and no longer responds.`
+                    ],
+                    correctAnswer: 0,
+                    explanation: `Equilibrium shifts in the direction that counteracts the imposed change, so adding reactant drives the reaction forward.`
+                },
+                {
+                    type: 'multiple-choice',
+                    question: `Which statement about the equilibrium constant K is correct?`,
+                    options: [
+                        `K depends only on temperature and remains unchanged by the addition of catalysts or concentration changes.`,
+                        `K increases when products are removed from the system.`,
+                        `K decreases when more reactants are added.`,
+                        `K equals zero at equilibrium.`
+                    ],
+                    correctAnswer: 0,
+                    explanation: `Only temperature affects K; other changes cause temporary shifts until a new equilibrium is reached.`
+                },
+                {
+                    type: 'essay',
+                    question: `Describe how to set up an ICE (Initial-Change-Equilibrium) table for ${topicName}.`,
+                    answer: `List initial concentrations, define the change using stoichiometric coefficients, and express equilibrium values in terms of x, then substitute into the equilibrium expression to solve for x.`
+                }
+            );
+
+            if (difficulty === 'advanced') {
+                templates.push({
+                    type: 'essay',
+                    question: `Explain how temperature changes affect equilibrium position for an exothermic versus endothermic ${topicName} reaction.`,
+                    answer: `Increasing temperature shifts an endothermic equilibrium toward products and an exothermic equilibrium toward reactants because heat is treated like a reactant or product in Le Chatelier's principle.`
+                });
+            }
+
+            return templates;
+        }
+
+        if (this.topicContainsAny(topicLower, ['thermo', 'enthalpy', 'entropy', 'gibbs'])) {
+            templates.push(
+                {
+                    type: 'multiple-choice',
+                    question: `Which expression correctly relates Gibbs free energy, enthalpy, and entropy changes?`,
+                    options: [
+                        `ΔG = ΔH − TΔS`,
+                        `ΔG = ΔH + TΔS`,
+                        `ΔG = ΔH × ΔS`,
+                        `ΔG = ΔH / TΔS`
+                    ],
+                    correctAnswer: 0,
+                    explanation: `Spontaneity at constant temperature and pressure is predicted by ΔG = ΔH − TΔS.`
+                },
+                {
+                    type: 'multiple-choice',
+                    question: `A reaction has ΔH < 0 and ΔS < 0. Under which condition will it be spontaneous?`,
+                    options: [
+                        `At low temperatures where the negative ΔH term dominates.`,
+                        `At high temperatures where the −TΔS term dominates.`,
+                        `Only when pressure decreases dramatically.`,
+                        `Never; such reactions cannot be spontaneous.`
+                    ],
+                    correctAnswer: 0,
+                    explanation: `When both enthalpy and entropy are negative, spontaneity is favored at low temperatures so that the exothermic enthalpy term outweighs the unfavorable entropy term.`
+                },
+                {
+                    type: 'essay',
+                    question: `Explain how calorimetry experiments determine ΔH for ${topicName}.`,
+                    answer: `Measure temperature change in a known mass using q = mcΔT, account for solution or calorimeter heat capacity, and divide by moles reacted to find molar enthalpy.`
+                }
+            );
+
+            if (difficulty === 'advanced') {
+                templates.push({
+                    type: 'essay',
+                    question: `Discuss how coupling reactions with positive ΔG to reactions with negative ΔG can make ${topicName} processes spontaneous.`,
+                    answer: `Biochemical and industrial reactions pair non-spontaneous steps with highly exergonic reactions so that the sum of ΔG values becomes negative.`
+                });
+            }
+
+            return templates;
+        }
+
+        if (this.topicContainsAny(topicLower, ['gas law', 'pressure', 'boyle', 'charles', 'ideal gas'])) {
+            templates.push(
+                {
+                    type: 'multiple-choice',
+                    question: `According to Boyle's law, what happens to gas volume when pressure increases at constant temperature?`,
+                    options: [
+                        `Volume decreases because pressure and volume are inversely proportional.`,
+                        `Volume increases because pressure and volume are directly proportional.`,
+                        `Volume remains constant regardless of pressure changes.`,
+                        `Volume becomes zero at any non-zero pressure.`
+                    ],
+                    correctAnswer: 0,
+                    explanation: `Boyle's law states P ∝ 1/V for a fixed amount of gas at constant temperature.`
+                },
+                {
+                    type: 'multiple-choice',
+                    question: `Which equation combines pressure, volume, moles, and temperature for ideal gases?`,
+                    options: [
+                        `PV = nRT`,
+                        `P = mv`,
+                        `V = IR`,
+                        `P = nT`
+                    ],
+                    correctAnswer: 0,
+                    explanation: `The ideal gas law relates the four state variables: pressure, volume, moles, and temperature.`
+                },
+                {
+                    type: 'essay',
+                    question: `Describe how to correct ideal gas calculations for real gases at high pressure.`,
+                    answer: `Use the van der Waals equation or other real-gas corrections that account for particle volume (b) and intermolecular attractions (a).`
+                }
+            );
+
+            return templates;
+        }
+
+        // General chemistry fallback
+        const generalChemistry = [
+            {
+                type: 'multiple-choice',
+                question: `Which laboratory safety practice is essential when working with ${topicName}?`,
+                options: [
+                    `Wear appropriate PPE and review the material safety data before starting.`,
+                    `Taste reagents to identify them.`,
+                    `Ignore spills until the end of the experiment.`,
+                    `Mix unknown chemicals without checking compatibility.`
+                ],
+                correctAnswer: 0,
+                explanation: `Safe lab practices prevent accidents and ensure accurate data when studying ${topicName}.`
+            },
+            {
+                type: 'essay',
+                question: `Explain one everyday application that illustrates ${topicName}.`,
+                answer: `Describe a device, product, or natural process where ${topicName} is the central idea and explain the underlying chemistry.`
+            }
+        ];
+
+        if (difficulty === 'advanced') {
+            generalChemistry.push({
+                type: 'essay',
+                question: `Propose an investigative lab procedure to explore ${topicName}.`,
+                answer: `Outline a hypothesis, controlled variables, data collection method, and analysis that would deepen understanding of ${topicName}.`
+            });
+        }
+
+        return generalChemistry;
+    }
+
+    generateExtendedQuestion(topic, index, difficulty, subject) {
         const topicName = this.formatTopicName(topic);
         const questionNumber = index + 1;
+
+        if (this.isChemistryTopic(topicName, subject)) {
+            const chemPrompts = [
+                {
+                    type: 'essay',
+                    question: `Discuss how temperature, pressure, or concentration changes could influence ${topicName}.`,
+                    answer: `Use collision theory or Le Chatelier's principle to explain how changing conditions alter reaction rates, equilibrium position, or particle arrangement for ${topicName}.`
+                },
+                {
+                    type: 'essay',
+                    question: `Describe an experiment that could confirm a key property of ${topicName}.`,
+                    answer: `Outline materials, measurements, and expected observations that would verify the defining property of ${topicName} (for example, conductivity for ionic compounds or color change for acid-base indicators).`
+                },
+                {
+                    type: 'essay',
+                    question: `Predict how ${topicName} would be represented on a potential energy or phase diagram and explain your reasoning.`,
+                    answer: `Identify the relevant regions or activation barriers on the diagram and connect them to the behavior of ${topicName}.`
+                }
+            ];
+
+            if (difficulty === 'advanced') {
+                chemPrompts.push({
+                    type: 'essay',
+                    question: `Relate ${topicName} to a real industrial or biochemical process and discuss efficiency or safety considerations.`,
+                    answer: `Explain how ${topicName} appears in manufacturing, environmental systems, or metabolism, highlighting why controlling conditions is critical.`
+                });
+            }
+
+            return this.cloneQuestion(chemPrompts[index % chemPrompts.length]);
+        }
+
         const prompts = [
             {
                 type: 'essay',
@@ -325,6 +692,23 @@ class StudyGuideGenerator {
         }
 
         return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+    }
+
+    topicContainsAny(topicLower, keywords) {
+        return keywords.some(keyword => topicLower.includes(keyword));
+    }
+
+    isChemistryTopic(topicName, subject) {
+        const normalizedSubject = (subject || '').toLowerCase();
+        const topicLower = topicName.toLowerCase();
+        const chemistryKeywords = [
+            'chem', 'bond', 'ionic', 'covalent', 'metallic', 'acid', 'base', 'ph', 'titration',
+            'stoichi', 'mole', 'equilibrium', 'reaction', 'enthalpy', 'entropy', 'gibbs',
+            'periodic', 'electron', 'atomic', 'molecule', 'gas', 'pressure', 'thermo',
+            'oxidation', 'reduction', 'redox', 'solution', 'solubility', 'kinetics', 'rate'
+        ];
+
+        return normalizedSubject.includes('chem') || this.topicContainsAny(topicLower, chemistryKeywords);
     }
  
     closeModal() {
@@ -480,7 +864,7 @@ class StudyGuideGenerator {
             Object.entries(categorizedTopics).forEach(([category, topicList]) => {
                 sections.push({
                     title: category,
-                    topics: topicList.map(topic => this.generateTopicContent(topic, studyType, difficulty))
+                    topics: topicList.map(topic => this.generateTopicContent(topic, studyType, difficulty, subject))
                 });
             });
         }
@@ -514,14 +898,14 @@ class StudyGuideGenerator {
         return Object.fromEntries(Object.entries(categories).filter(([_, topics]) => topics.length > 0));
     }
 
-    generateTopicContent(topic, studyType, difficulty) {
+    generateTopicContent(topic, studyType, difficulty, subject) {
         const content = {
             title: topic,
             keyPoints: this.generateKeyPoints(topic, difficulty),
             details: this.generateDetails(topic, difficulty),
             examples: this.generateExamples(topic, difficulty),
             studyTips: this.generateStudyTips(topic, difficulty),
-            practiceQuestions: this.generatePracticeQuestions(topic, difficulty)
+            practiceQuestions: this.generatePracticeQuestions(topic, difficulty, subject)
         };
 
         return content;
@@ -529,7 +913,7 @@ class StudyGuideGenerator {
 
     generateTopicContentFromRealData(topicName, questions, tips) {
         // Get max questions from user setting or default to all
-        const maxQuestions = this.numQuestions ? parseInt(this.numQuestions.value) || questions.length : questions.length;
+        const maxQuestions = this.getDesiredQuestionCount();
         const limitedQuestions = questions.slice(0, maxQuestions);
         
         // Extract key points from questions
@@ -633,9 +1017,9 @@ class StudyGuideGenerator {
         return tips.slice(0, difficulty === 'beginner' ? 3 : 4);
     }
 
-    generatePracticeQuestions(topic, difficulty) {
+    generatePracticeQuestions(topic, difficulty, subject) {
         const desiredCount = this.getDesiredQuestionCount();
-        const baseTemplates = this.createQuestionTemplates(topic, difficulty);
+        const baseTemplates = this.createQuestionTemplates(topic, difficulty, subject);
         const questions = [];
 
         let index = 0;
@@ -644,7 +1028,7 @@ class StudyGuideGenerator {
             if (index < baseTemplates.length) {
                 template = baseTemplates[index];
             } else {
-                template = this.generateExtendedQuestion(topic, index, difficulty);
+                template = this.generateExtendedQuestion(topic, index, difficulty, subject);
             }
 
             questions.push(this.cloneQuestion(template));
@@ -1249,169 +1633,4 @@ class StudyGuideGenerator {
                     </div>
                 </div>
             </div>
-        `;
-    }
-
-    createQuizQuestion(question, index) {
-        const letters = ['A', 'B', 'C', 'D'];
-        
-        return `
-            <div class="question-card">
-                <div class="question-number">${index + 1}</div>
-                <div class="question-text">${question.question}</div>
-                <div class="quiz-options">
-                    ${question.options.map((option, i) => `
-                        <div class="quiz-option" onclick="studyGuideGenerator.selectAnswer(${index}, ${i})">
-                            <div class="option-letter">${letters[i]}</div>
-                            <div>${option}</div>
-                        </div>
-                    `).join('')}
-                </div>
-                <div class="quiz-navigation">
-                    <div class="quiz-progress">
-                        <span>Question ${index + 1} of ${this.quizQuestions.length}</span>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: ${((index + 1) / this.quizQuestions.length) * 100}%"></div>
-                        </div>
-                    </div>
-                    <button class="btn btn-primary" onclick="studyGuideGenerator.nextQuizQuestion()" ${index === this.quizQuestions.length - 1 ? 'onclick="studyGuideGenerator.finishQuiz()"' : ''}>
-                        ${index === this.quizQuestions.length - 1 ? 'Finish Quiz' : 'Next Question'}
-                    </button>
-                </div>
-            </div>
-        `;
-    }
-
-    selectAnswer(questionIndex, optionIndex) {
-        // Remove previous selection
-        const questionCard = document.querySelector('.question-card');
-        const options = questionCard.querySelectorAll('.quiz-option');
-        options.forEach(option => option.classList.remove('selected'));
-        
-        // Add selection to clicked option
-        options[optionIndex].classList.add('selected');
-        
-        // Store answer
-        this.quizAnswers[questionIndex] = optionIndex;
-    }
-
-    nextQuizQuestion() {
-        if (this.currentQuizQuestion < this.quizQuestions.length - 1) {
-            this.currentQuizQuestion++;
-            this.updateQuizQuestion();
-        }
-    }
-
-    updateQuizQuestion() {
-        const container = document.querySelector('.quiz-container');
-        if (container) {
-            const header = this.createQuizHeader();
-            const question = this.createQuizQuestion(this.quizQuestions[this.currentQuizQuestion], this.currentQuizQuestion);
-            container.innerHTML = header + question;
-        }
-    }
-
-    finishQuiz() {
-        const score = this.calculateQuizScore();
-        this.displayQuizResults(score);
-    }
-
-    calculateQuizScore() {
-        let correct = 0;
-        this.quizQuestions.forEach((question, index) => {
-            const userAnswer = this.quizAnswers[index];
-            const correctAnswerIndex = question.options.indexOf(question.correctAnswer);
-            if (userAnswer === correctAnswerIndex) {
-                correct++;
-            }
-        });
-        
-        return {
-            correct,
-            total: this.quizQuestions.length,
-            percentage: Math.round((correct / this.quizQuestions.length) * 100)
-        };
-    }
-
-    displayQuizResults(score) {
-        let grade, gradeClass, summary;
-        
-        if (score.percentage >= 90) {
-            grade = 'A+';
-            gradeClass = 'excellent';
-            summary = 'Excellent work! You have a strong understanding of the material.';
-        } else if (score.percentage >= 80) {
-            grade = 'B+';
-            gradeClass = 'good';
-            summary = 'Good job! You understand most of the concepts well.';
-        } else if (score.percentage >= 70) {
-            grade = 'C+';
-            gradeClass = 'good';
-            summary = 'Not bad! Consider reviewing some topics for better understanding.';
-        } else {
-            grade = 'D';
-            gradeClass = 'poor';
-            summary = 'Keep studying! Review the material and try the quiz again.';
-        }
-        
-        const container = document.querySelector('.quiz-container');
-        container.innerHTML = `
-            <div class="quiz-results">
-                <div class="quiz-score ${gradeClass}">${score.percentage}%</div>
-                <div class="quiz-grade">Grade: ${grade}</div>
-                <div class="quiz-summary">${summary}</div>
-                <div class="quiz-breakdown">
-                    <div class="breakdown-item">
-                        <div class="breakdown-number">${score.correct}</div>
-                        <div class="breakdown-label">Correct</div>
-                    </div>
-                    <div class="breakdown-item">
-                        <div class="breakdown-number">${score.total - score.correct}</div>
-                        <div class="breakdown-label">Incorrect</div>
-                    </div>
-                    <div class="breakdown-item">
-                        <div class="breakdown-number">${score.total}</div>
-                        <div class="breakdown-label">Total Questions</div>
-                    </div>
-                </div>
-                <button class="btn btn-primary" onclick="studyGuideGenerator.restartInteractive()">
-                    <i class="fas fa-redo"></i> Try Again
-                </button>
-            </div>
-        `;
-    }
-
-    restartInteractive() {
-        this.currentFlashcardIndex = 0;
-        this.currentQuizQuestion = 0;
-        this.quizAnswers = [];
-        this.restartBtn.style.display = 'none';
-        
-        // Regenerate the current study guide
-        this.generateStudyGuide();
-    }
-}
-
-// Initialize the application when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    window.studyGuideGenerator = new StudyGuideGenerator();
-    // Initialize question selector visibility
-    window.studyGuideGenerator.toggleQuestionSelector();
-    // Initialize button states
-    window.studyGuideGenerator.updateNumberButtons();
-});
-
-// Add CSS animations for notifications
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes slideIn {
-        from { transform: translateX(100%); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
-    }
-    
-    @keyframes slideOut {
-        from { transform: translateX(0); opacity: 1; }
-        to { transform: translateX(100%); opacity: 0; }
-    }
-`;
-document.head.appendChild(style);
+        `
