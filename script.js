@@ -192,11 +192,7 @@ class StudyGuideGenerator {
         const topicName = this.formatTopicName(topic);
         const specializedTemplates = this.getSpecializedTemplates(topicName, subject, difficulty);
 
-        if (specializedTemplates && specializedTemplates.length > 0) {
-            return specializedTemplates;
-        }
-
-        const templates = [
+        const baseTemplates = specializedTemplates && specializedTemplates.length > 0 ? specializedTemplates : [
             {
                 type: 'multiple-choice',
                 question: `Which fact about ${topicName} is correct?`,
@@ -234,14 +230,14 @@ class StudyGuideGenerator {
         ];
 
         if (difficulty === 'advanced') {
-            templates.push({
+            baseTemplates.push({
                 type: 'essay',
                 question: `Compare ${topicName} to another advanced concept and explain how they reinforce each other.`,
                 answer: `Point out a related advanced topic, explain the connection, and show how mastering ${topicName} improves your reasoning or calculations for both topics.`
             });
         }
 
-        return templates;
+        return baseTemplates.map(template => this.ensureMultipleChoice(template, topicName, subject));
     }
 
     getSpecializedTemplates(topicName, subject, difficulty) {
@@ -295,7 +291,7 @@ class StudyGuideGenerator {
                 });
             }
 
-            return templates;
+            return templates.map(template => this.ensureMultipleChoice(template, topicName, subject));
         }
 
         if (this.topicContainsAny(topicLower, ['periodic', 'trend', 'electronegativity', 'ionization', 'atomic radius'])) {
@@ -339,7 +335,7 @@ class StudyGuideGenerator {
                 });
             }
 
-            return templates;
+            return templates.map(template => this.ensureMultipleChoice(template, topicName, subject));
         }
 
         if (this.topicContainsAny(topicLower, ['acid', 'base', 'ph', 'titration'])) {
@@ -383,7 +379,7 @@ class StudyGuideGenerator {
                 });
             }
 
-            return templates;
+            return templates.map(template => this.ensureMultipleChoice(template, topicName, subject));
         }
 
         if (this.topicContainsAny(topicLower, ['stoichi', 'mole', 'limiting', 'yield'])) {
@@ -427,7 +423,7 @@ class StudyGuideGenerator {
                 });
             }
 
-            return templates;
+            return templates.map(template => this.ensureMultipleChoice(template, topicName, subject));
         }
 
         if (this.topicContainsAny(topicLower, ['equilibrium', 'le chatelier', 'ksp', 'kc', 'kp'])) {
@@ -471,7 +467,7 @@ class StudyGuideGenerator {
                 });
             }
 
-            return templates;
+            return templates.map(template => this.ensureMultipleChoice(template, topicName, subject));
         }
 
         if (this.topicContainsAny(topicLower, ['thermo', 'enthalpy', 'entropy', 'gibbs'])) {
@@ -515,7 +511,7 @@ class StudyGuideGenerator {
                 });
             }
 
-            return templates;
+            return templates.map(template => this.ensureMultipleChoice(template, topicName, subject));
         }
 
         if (this.topicContainsAny(topicLower, ['gas law', 'pressure', 'boyle', 'charles', 'ideal gas'])) {
@@ -551,7 +547,7 @@ class StudyGuideGenerator {
                 }
             );
 
-            return templates;
+            return templates.map(template => this.ensureMultipleChoice(template, topicName, subject));
         }
 
         const generalChemistry = [
@@ -582,7 +578,7 @@ class StudyGuideGenerator {
             });
         }
 
-        return generalChemistry;
+        return generalChemistry.map(template => this.ensureMultipleChoice(template, topicName, subject));
     }
 
     generateExtendedQuestion(topic, index, difficulty, subject) {
@@ -616,7 +612,8 @@ class StudyGuideGenerator {
                 });
             }
 
-            return this.cloneQuestion(chemPrompts[index % chemPrompts.length]);
+            const template = chemPrompts[index % chemPrompts.length];
+            return this.ensureMultipleChoice(template, topicName, subject);
         }
 
         const prompts = [
@@ -645,7 +642,8 @@ class StudyGuideGenerator {
             });
         }
 
-        return this.cloneQuestion(prompts[index % prompts.length]);
+        const template = prompts[index % prompts.length];
+        return this.ensureMultipleChoice(template, topicName, subject);
     }
 
     cloneQuestion(template) {
@@ -660,6 +658,46 @@ class StudyGuideGenerator {
         }
 
         return { ...template };
+    }
+
+    ensureMultipleChoice(template, topicName, subject) {
+        if (template.type === 'multiple-choice' && template.options && template.options.length > 0) {
+            return template;
+        }
+
+        const correctText = template.answer || template.explanation || `Provide the accurate explanation for ${topicName}.`;
+        const genericDistractors = this.generateGenericDistractors(topicName, subject, correctText);
+
+        return {
+            question: template.question,
+            type: 'multiple-choice',
+            options: [correctText, ...genericDistractors],
+            correctAnswer: 0,
+            explanation: correctText
+        };
+    }
+
+    generateGenericDistractors(topicName, subject, correctText) {
+        const topicRef = topicName || 'the topic';
+        const baseDistractors = [
+            `An incomplete or vague description that leaves out key facts about ${topicRef}.`,
+            `A statement that contradicts the core principles of ${topicRef}.`,
+            `An answer that focuses on an unrelated concept instead of ${topicRef}.`,
+            `A memorized phrase that sounds similar but is inaccurate for ${topicRef}.`
+        ];
+
+        const uniqueDistractors = [];
+        for (let i = 0; i < baseDistractors.length && uniqueDistractors.length < 3; i++) {
+            if (!baseDistractors[i].includes(correctText)) {
+                uniqueDistractors.push(baseDistractors[i]);
+            }
+        }
+
+        while (uniqueDistractors.length < 3) {
+            uniqueDistractors.push(`An answer that does not accurately describe ${topicRef}.`);
+        }
+
+        return uniqueDistractors.slice(0, 3);
     }
 
     formatTopicName(topic) {
@@ -917,7 +955,8 @@ class StudyGuideGenerator {
                 question.explanation = q.explanation;
             }
             
-            return question;
+            const subjectText = this.subjectInput ? this.subjectInput.value.trim() : '';
+            return this.ensureMultipleChoice(question, topicName, subjectText);
         });
 
         return {
