@@ -1077,22 +1077,44 @@ class StudyGuideGenerator {
             this.openModal();
             
             // Add event listeners for interactive questions
-            this.attachQuestionListeners();
+            this.attachQuestionListeners(this.modalContent);
+            this.attachShowAnswerListeners(this.modalContent);
         } else {
             this.studyGuide.innerHTML = html;
             this.outputPanel.style.display = 'block';
             this.outputPanel.scrollIntoView({ behavior: 'smooth' });
+            this.attachQuestionListeners(this.studyGuide);
+            this.attachShowAnswerListeners(this.studyGuide);
         }
     }
     
-    attachQuestionListeners() {
-        // Attach listeners to all MCQ options
-        const allMcqOptions = this.modalContent.querySelectorAll('.mcq-option');
+    attachQuestionListeners(container) {
+        if (!container) return;
+        const allMcqOptions = container.querySelectorAll('.mcq-option');
         allMcqOptions.forEach(option => {
             option.addEventListener('click', () => this.handleAnswerClick(option));
         });
     }
-    
+
+    attachShowAnswerListeners(container) {
+        if (!container) return;
+        const showAnswerButtons = container.querySelectorAll('.show-answer-btn[data-action="show-answer"]');
+        showAnswerButtons.forEach(button => {
+            button.addEventListener('click', (event) => {
+                event.preventDefault();
+                const practiceQuestion = button.closest('.practice-question');
+                if (!practiceQuestion) {
+                    return;
+                }
+                const answerSection = practiceQuestion.querySelector('.answer-section');
+                if (answerSection) {
+                    answerSection.style.display = 'block';
+                }
+                button.style.display = 'none';
+            }, { once: true });
+        });
+    }
+ 
     handleAnswerClick(clickedOption) {
         const questionContainer = clickedOption.closest('.practice-question');
         const allOptions = questionContainer.querySelectorAll('.mcq-option');
@@ -1249,7 +1271,7 @@ class StudyGuideGenerator {
                                     // Essay, conceptual, or other non-multiple-choice questions
                                     questionHtml += `
                                         <div class="show-answer-container">
-                                            <button class="show-answer-btn" onclick="this.nextElementSibling.style.display='block'; this.style.display='none';">
+                                            <button class="show-answer-btn" data-action="show-answer">
                                                 <i class="fas fa-eye"></i> Show Answer
                                             </button>
                                         </div>
