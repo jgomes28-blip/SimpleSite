@@ -98,6 +98,44 @@ class StudyGuideGenerator {
         this.currentQuizQuestion = 0;
         this.quizAnswers = [];
         this.quizQuestions = [];
+        
+        // Tutorial elements
+        this.tutorialBtn = document.getElementById('tutorialBtn');
+        this.tutorialOverlay = document.getElementById('tutorialOverlay');
+        this.tutorialHighlight = document.getElementById('tutorialHighlight');
+        this.tutorialCard = document.getElementById('tutorialCard');
+        this.tutorialClose = document.getElementById('tutorialClose');
+        this.tutorialSkip = document.getElementById('tutorialSkip');
+        this.tutorialNext = document.getElementById('tutorialNext');
+        this.tutorialPrev = document.getElementById('tutorialPrev');
+        this.tutorialStepNumber = document.getElementById('tutorialStepNumber');
+        this.tutorialTitle = document.getElementById('tutorialTitle');
+        this.tutorialDescription = document.getElementById('tutorialDescription');
+        this.tutorialExample = document.getElementById('tutorialExample');
+        this.currentTutorialStep = 0;
+        this.tutorialSteps = [
+            {
+                title: 'Step 1: Enter Your Subject',
+                description: 'Type the subject or topic you want to study. The app will automatically detect it and suggest relevant topics!',
+                example: 'Try: "Massachusetts Permit Test" or "Biology"',
+                element: 'subject',
+                scrollTo: true
+            },
+            {
+                title: 'Step 2: Choose Your Study Format',
+                description: 'Select from 7 different study guide formats. Each format is designed for different learning styles and study needs.',
+                example: 'Comprehensive guides include practice questions, while quizzes test your knowledge instantly.',
+                element: 'studyType',
+                scrollTo: false
+            },
+            {
+                title: 'Step 3: Generate & Study',
+                description: 'Click the generate button to create your personalized study guide. Then interact with practice questions to test your knowledge!',
+                example: 'Try answering a question to see instant feedback and explanations.',
+                element: 'generateBtn',
+                scrollTo: false
+            }
+        ];
     }
 
     bindEvents() {
@@ -132,6 +170,23 @@ class StudyGuideGenerator {
         
         // Auto-detect subject and suggest topics
         this.subjectInput.addEventListener('input', () => this.suggestTopics());
+        
+        // Tutorial events
+        if (this.tutorialBtn) {
+            this.tutorialBtn.addEventListener('click', () => this.startTutorial());
+        }
+        if (this.tutorialClose) {
+            this.tutorialClose.addEventListener('click', () => this.closeTutorial());
+        }
+        if (this.tutorialSkip) {
+            this.tutorialSkip.addEventListener('click', () => this.closeTutorial());
+        }
+        if (this.tutorialNext) {
+            this.tutorialNext.addEventListener('click', () => this.nextTutorialStep());
+        }
+        if (this.tutorialPrev) {
+            this.tutorialPrev.addEventListener('click', () => this.prevTutorialStep());
+        }
     }
     
     toggleQuestionSelector() {
@@ -1815,6 +1870,126 @@ class StudyGuideGenerator {
         
         // Regenerate the current study guide
         this.generateStudyGuide();
+    }
+
+    // Tutorial Methods
+    startTutorial() {
+        this.currentTutorialStep = 0;
+        // Reset card position
+        this.tutorialCard.style.top = 'auto';
+        this.tutorialCard.style.bottom = '2rem';
+        this.showTutorialStep(0);
+        this.tutorialOverlay.style.display = 'block';
+        setTimeout(() => {
+            this.tutorialOverlay.classList.add('active');
+        }, 10);
+        document.body.style.overflow = 'hidden';
+    }
+
+    closeTutorial() {
+        this.tutorialOverlay.classList.remove('active');
+        setTimeout(() => {
+            this.tutorialOverlay.style.display = 'none';
+            this.tutorialHighlight.style.width = '0';
+            this.tutorialHighlight.style.height = '0';
+            this.tutorialHighlight.style.top = '0';
+            this.tutorialHighlight.style.left = '0';
+            document.body.style.overflow = '';
+        }, 400);
+    }
+
+    nextTutorialStep() {
+        if (this.currentTutorialStep < this.tutorialSteps.length - 1) {
+            this.currentTutorialStep++;
+            this.showTutorialStep(this.currentTutorialStep);
+        } else {
+            this.closeTutorial();
+        }
+    }
+
+    prevTutorialStep() {
+        if (this.currentTutorialStep > 0) {
+            this.currentTutorialStep--;
+            this.showTutorialStep(this.currentTutorialStep);
+        }
+    }
+
+    showTutorialStep(stepIndex) {
+        const step = this.tutorialSteps[stepIndex];
+        if (!step) return;
+
+        // Update tutorial card content
+        this.tutorialStepNumber.textContent = stepIndex + 1;
+        this.tutorialTitle.textContent = step.title;
+        this.tutorialDescription.textContent = step.description;
+        this.tutorialExample.querySelector('span').textContent = step.example;
+
+        // Show/hide navigation buttons
+        this.tutorialPrev.style.display = stepIndex === 0 ? 'none' : 'inline-flex';
+        this.tutorialNext.textContent = stepIndex === this.tutorialSteps.length - 1 ? 'Finish' : 'Next';
+        this.tutorialNext.innerHTML = stepIndex === this.tutorialSteps.length - 1 
+            ? 'Finish <i class="fas fa-check"></i>' 
+            : 'Next <i class="fas fa-chevron-right"></i>';
+
+        // Get target element
+        let targetElement;
+        if (step.element === 'subject') {
+            targetElement = this.subjectInput.closest('.form-group');
+        } else if (step.element === 'studyType') {
+            targetElement = this.studyTypeSelect.closest('.form-group');
+        } else if (step.element === 'generateBtn') {
+            targetElement = this.generateBtn;
+        }
+
+        if (targetElement) {
+            // Scroll to element if needed
+            if (step.scrollTo) {
+                setTimeout(() => {
+                    targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 100);
+            }
+
+            // Position highlight box
+            setTimeout(() => {
+                this.positionHighlight(targetElement);
+            }, step.scrollTo ? 500 : 100);
+        }
+    }
+
+    positionHighlight(element) {
+        if (!element) return;
+
+        const rect = element.getBoundingClientRect();
+        const scrollX = window.scrollX || window.pageXOffset;
+        const scrollY = window.scrollY || window.pageYOffset;
+
+        // Add padding around the element
+        const padding = 12;
+        const top = rect.top + scrollY - padding;
+        const left = rect.left + scrollX - padding;
+        const width = rect.width + (padding * 2);
+        const height = rect.height + (padding * 2);
+
+        // Set highlight position and size
+        this.tutorialHighlight.style.top = `${top}px`;
+        this.tutorialHighlight.style.left = `${left}px`;
+        this.tutorialHighlight.style.width = `${width}px`;
+        this.tutorialHighlight.style.height = `${height}px`;
+
+        // Position tutorial card relative to highlight (using viewport coordinates for fixed positioning)
+        const highlightBottom = rect.bottom; // Already viewport-relative
+        const spaceBelow = window.innerHeight - highlightBottom;
+        const spaceAbove = rect.top;
+        const cardHeight = 300; // Approximate card height
+
+        // Position card below if there's space, otherwise above
+        if (spaceBelow > cardHeight + 20 || spaceBelow > spaceAbove) {
+            this.tutorialCard.style.bottom = 'auto';
+            this.tutorialCard.style.top = `${highlightBottom + 20}px`;
+        } else {
+            this.tutorialCard.style.top = 'auto';
+            this.tutorialCard.style.bottom = `${window.innerHeight - rect.top + 20}px`;
+        }
     }
 }
 
