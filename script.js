@@ -247,52 +247,540 @@ class StudyGuideGenerator {
         const topicName = this.formatTopicName(topic);
         const specializedTemplates = this.getSpecializedTemplates(topicName, subject, difficulty);
 
-        const baseTemplates = specializedTemplates && specializedTemplates.length > 0 ? specializedTemplates : [
-            {
-                type: 'multiple-choice',
-                question: `Which fact about ${topicName} is correct?`,
-                options: [
-                    `${topicName} builds on prerequisite concepts and has key definitions you must memorize accurately.`,
-                    `${topicName} has no relationship to other topics in the course.`,
-                    `${topicName} is based entirely on opinion and has no factual basis.`,
-                    `${topicName} never appears on written assessments.`
-                ],
-                correctAnswer: 0,
-                explanation: `${topicName} connects to other ideas in the course and requires clear, factual understanding.`
-            },
-            {
-                type: 'multiple-choice',
-                question: `Which question would help you check your mastery of ${topicName}?`,
-                options: [
-                    `Can I explain ${topicName} in my own words and apply it to a new example?`,
-                    `Can I avoid practicing ${topicName} and still succeed?`,
-                    `Can I rely only on memorizing the heading "${topicName}"?`,
-                    `Can I ignore how ${topicName} connects to exam questions?`
-                ],
-                correctAnswer: 0,
-                explanation: `When you can teach ${topicName} using your own example, you understand it at exam level.`
-            },
-            {
-                type: 'essay',
-                question: `Summarize the key components of ${topicName} that you must be able to explain on an assessment.`,
-                answer: `Identify the core definition of ${topicName}, list the supporting facts or formulas, and describe how to apply them to common exam scenarios.`
-            },
-            {
-                type: 'essay',
-                question: `Create a high-yield reference sheet for ${topicName}.`,
-                answer: `Include a concise definition, the essential formulas or relationships, and one original example that shows how to use ${topicName}.`
-            }
-        ];
+        // If we have specialized templates, use those
+        if (specializedTemplates && specializedTemplates.length > 0) {
+            return specializedTemplates.map(template => this.ensureMultipleChoice(template, topicName, subject));
+        }
 
-        if (difficulty === 'advanced') {
-            baseTemplates.push({
+        // Generate intelligent, topic-specific questions
+        const topicKeywords = this.extractTopicKeywords(topicName, subject);
+        const baseTemplates = this.generateIntelligentQuestions(topicName, topicKeywords, difficulty, subject);
+
+        return baseTemplates.map(template => this.ensureMultipleChoice(template, topicName, subject));
+    }
+
+    extractTopicKeywords(topicName, subject) {
+        const topicLower = topicName.toLowerCase();
+        const subjectLower = (subject || '').toLowerCase();
+        
+        // Extract key concepts from topic name
+        const keywords = [];
+        const commonTerms = {
+            'theory': 'theoretical framework',
+            'law': 'scientific principle',
+            'principle': 'fundamental concept',
+            'process': 'step-by-step procedure',
+            'system': 'organized structure',
+            'function': 'purpose and operation',
+            'structure': 'organization and components',
+            'mechanism': 'how it works',
+            'effect': 'outcome or result',
+            'cause': 'origin or source',
+            'relationship': 'connection or correlation',
+            'difference': 'distinction or contrast',
+            'similarity': 'common characteristics',
+            'example': 'specific instance',
+            'application': 'practical use'
+        };
+
+        // Check for common academic terms
+        for (const [term, concept] of Object.entries(commonTerms)) {
+            if (topicLower.includes(term)) {
+                keywords.push(concept);
+            }
+        }
+
+        // Subject-specific keywords
+        if (subjectLower.includes('math') || subjectLower.includes('calculus') || subjectLower.includes('algebra')) {
+            if (topicLower.match(/\b(function|equation|formula|derivative|integral|limit|graph)\b/)) {
+                keywords.push('mathematical concept');
+            }
+        }
+        if (subjectLower.includes('science') || subjectLower.includes('biology') || subjectLower.includes('chemistry') || subjectLower.includes('physics')) {
+            if (topicLower.match(/\b(cell|molecule|atom|reaction|force|energy|wave)\b/)) {
+                keywords.push('scientific concept');
+            }
+        }
+        if (subjectLower.includes('history') || subjectLower.includes('social')) {
+            if (topicLower.match(/\b(war|revolution|empire|civilization|event|period)\b/)) {
+                keywords.push('historical context');
+            }
+        }
+
+        return keywords.length > 0 ? keywords : ['key concept', 'important topic'];
+    }
+
+    generateIntelligentQuestions(topicName, keywords, difficulty, subject) {
+        const questions = [];
+        const topicLower = topicName.toLowerCase();
+        const subjectLower = (subject || '').toLowerCase();
+        
+        // Generate realistic distractors based on topic analysis
+        const distractors = this.generateRealisticDistractors(topicName, subject, keywords);
+        
+        // Question 1: Definition/Understanding
+        const definitionHint = this.generateDefinitionHint(topicName, subject);
+        questions.push({
+                type: 'multiple-choice',
+            question: `What best describes ${topicName}?`,
+                options: [
+                `${topicName} ${definitionHint}.`,
+                distractors.definition[0],
+                distractors.definition[1],
+                distractors.definition[2]
+                ],
+                correctAnswer: 0,
+            explanation: `${topicName} is an important concept in ${subject || 'this subject'}. To fully understand it, review its core definition, key characteristics, and how it's used in practice. Check the source links below for detailed explanations.`
+        });
+
+        // Question 2: Application/Use
+        questions.push({
+                type: 'multiple-choice',
+            question: `When would you use ${topicName}?`,
+                options: [
+                `When you need to ${this.generateApplicationHint(topicName, subject)}.`,
+                distractors.application[0],
+                distractors.application[1],
+                distractors.application[2]
+                ],
+                correctAnswer: 0,
+            explanation: `${topicName} is used in specific contexts related to ${subject || 'this subject'}. Understanding when and how to apply it correctly is key to mastering this concept. Practice with examples to build your understanding.`
+        });
+
+        // Question 3: Key Components
+        questions.push({
                 type: 'essay',
-                question: `Compare ${topicName} to another advanced concept and explain how they reinforce each other.`,
-                answer: `Point out a related advanced topic, explain the connection, and show how mastering ${topicName} improves your reasoning or calculations for both topics.`
+            question: `What are the main components or key aspects of ${topicName} that you need to understand?`,
+            answer: `The main components of ${topicName} include: (1) its core definition or purpose, (2) the ${keywords[0] || 'key principles'} that govern it, (3) how it relates to other concepts in ${subject || 'the subject'}, and (4) practical examples or applications. Focus on understanding each component and how they connect.`
+        });
+
+        // Question 4: Study Strategy
+        questions.push({
+                type: 'essay',
+            question: `What study strategies would be most effective for mastering ${topicName}?`,
+            answer: `Effective strategies for ${topicName} include: (1) Creating visual aids or diagrams to understand its structure, (2) Practicing with real examples from ${subject || 'your subject'}, (3) Connecting it to related concepts you already know, (4) Teaching it to someone else to test your understanding, and (5) Reviewing source materials and examples regularly.`
+        });
+
+        if (difficulty === 'intermediate' || difficulty === 'advanced') {
+            // Question 5: Analysis/Comparison
+            questions.push({
+                type: 'essay',
+                question: `How does ${topicName} relate to or differ from similar concepts in ${subject || 'this subject'}?`,
+                answer: `To understand ${topicName}'s relationship to similar concepts, identify: (1) What makes ${topicName} unique, (2) What it shares with related topics, (3) When to use ${topicName} versus alternatives, and (4) How understanding ${topicName} helps you understand the broader subject. Compare and contrast with at least one related concept.`
             });
         }
 
-        return baseTemplates.map(template => this.ensureMultipleChoice(template, topicName, subject));
+        if (difficulty === 'advanced') {
+            // Question 6: Critical Thinking
+            questions.push({
+                type: 'essay',
+                question: `What are the limitations or potential misconceptions about ${topicName}, and how would you address them?`,
+                answer: `Common limitations or misconceptions about ${topicName} include: (1) Oversimplifying its complexity, (2) Applying it incorrectly outside its intended context, (3) Confusing it with similar concepts. Address these by: understanding the full scope of ${topicName}, recognizing when it applies and when it doesn't, and clearly distinguishing it from related ideas.`
+            });
+        }
+
+        return questions;
+    }
+
+    generateDefinitionHint(topicName, subject) {
+        const topicLower = topicName.toLowerCase();
+        const subjectLower = (subject || '').toLowerCase();
+        
+        // More specific definitions based on topic analysis
+        if (topicLower.includes('law') || topicLower.includes('principle')) {
+            if (subjectLower.includes('math') || subjectLower.includes('physics')) {
+                return `is a fundamental ${subjectLower.includes('math') ? 'mathematical' : 'physical'} principle that describes a consistent relationship or pattern`;
+            }
+            return 'is a fundamental principle that governs behavior or establishes consistent patterns';
+        }
+        
+        if (topicLower.includes('theory') || topicLower.includes('model')) {
+            return 'is a theoretical framework that explains how something works or why it behaves a certain way';
+        }
+        
+        if (topicLower.includes('process') || topicLower.includes('method') || topicLower.includes('procedure')) {
+            return 'is a systematic approach or series of steps used to accomplish a specific goal';
+        }
+        
+        if (topicLower.includes('function') || topicLower.includes('role')) {
+            return 'describes the purpose, operation, or role of something within a larger system';
+        }
+        
+        if (topicLower.includes('structure') || topicLower.includes('organization')) {
+            return 'refers to how components are arranged, organized, or connected to form a whole';
+        }
+        
+        if (topicLower.includes('effect') || topicLower.includes('impact') || topicLower.includes('result')) {
+            return 'describes an outcome, consequence, or result that occurs under specific conditions';
+        }
+        
+        if (topicLower.includes('cause') || topicLower.includes('origin') || topicLower.includes('source')) {
+            return 'refers to the origin, source, or factor that leads to a particular outcome';
+        }
+        
+        if (subjectLower.includes('math') || subjectLower.includes('calculus') || subjectLower.includes('algebra')) {
+            // Slope-intercept form
+            if ((topicLower.includes('slope') && topicLower.includes('intercept')) || topicLower === 'slope intercept') {
+                return 'is the linear equation form y = mx + b, where m represents the slope (rate of change) and b represents the y-intercept (where the line crosses the y-axis)';
+            }
+            // Point-slope form
+            if (topicLower.includes('point') && topicLower.includes('slope')) {
+                return 'is the linear equation form y - y₁ = m(x - x₁), used when you know a point on the line and its slope';
+            }
+            // Standard form
+            if (topicLower.includes('standard form') || (topicLower.includes('standard') && topicLower.includes('form'))) {
+                return 'is the linear equation form Ax + By = C, where A, B, and C are integers, useful for solving systems of equations';
+            }
+            if (topicLower.includes('function')) {
+                return 'is a mathematical relationship that maps inputs to outputs according to a specific rule';
+            }
+            if (topicLower.includes('equation')) {
+                return 'is a mathematical statement that shows the equality between two expressions';
+            }
+            if (topicLower.includes('formula')) {
+                return 'is a mathematical expression that calculates a specific value or relationship';
+            }
+            // Quadratic formula
+            if (topicLower.includes('quadratic') && topicLower.includes('formula')) {
+                return 'is the formula x = (-b ± √(b² - 4ac)) / 2a used to solve any quadratic equation ax² + bx + c = 0';
+            }
+            return 'is a mathematical concept that helps solve problems and understand quantitative relationships';
+        }
+        
+        if (subjectLower.includes('science') || subjectLower.includes('biology')) {
+            if (topicLower.includes('cell') || topicLower.includes('organism')) {
+                return 'is a biological structure or system that performs specific functions in living organisms';
+            }
+            if (topicLower.includes('process') || topicLower.includes('mechanism')) {
+                return 'is a biological process that occurs in living systems to maintain function or respond to changes';
+            }
+            return 'explains natural phenomena, biological processes, or how living systems function';
+        }
+        
+        if (subjectLower.includes('chemistry')) {
+            if (topicLower.includes('reaction') || topicLower.includes('bond')) {
+                return 'describes how atoms or molecules interact, combine, or change to form new substances';
+            }
+            return 'describes chemical interactions, molecular behavior, or properties of matter';
+        }
+        
+        if (subjectLower.includes('physics')) {
+            if (topicLower.includes('force') || topicLower.includes('energy') || topicLower.includes('motion')) {
+                return 'describes physical interactions, energy transformations, or motion in the natural world';
+            }
+            return 'explains physical forces, energy, motion, or fundamental properties of matter and space';
+        }
+        
+        if (subjectLower.includes('history')) {
+            if (topicLower.includes('war') || topicLower.includes('revolution') || topicLower.includes('event')) {
+                return 'is a significant historical event that shaped societies, politics, or cultures';
+            }
+            if (topicLower.includes('period') || topicLower.includes('era')) {
+                return 'is a historical period characterized by specific social, political, or cultural developments';
+            }
+            return 'provides context for historical events, their causes, effects, and significance';
+        }
+        
+        // Default: more helpful generic definition
+        return `is a key concept in ${subject || 'this subject'} that you should study thoroughly to understand its definition, characteristics, and applications`;
+    }
+
+    generateApplicationHint(topicName, subject) {
+        const topicLower = topicName.toLowerCase();
+        const subjectLower = (subject || '').toLowerCase();
+        
+        if (subjectLower.includes('math')) {
+            return 'solve problems involving quantitative relationships or mathematical operations';
+        }
+        if (subjectLower.includes('science') || subjectLower.includes('biology')) {
+            return 'explain biological processes, analyze living systems, or understand natural phenomena';
+        }
+        if (subjectLower.includes('chemistry')) {
+            return 'predict chemical reactions, understand molecular behavior, or analyze chemical properties';
+        }
+        if (subjectLower.includes('physics')) {
+            return 'analyze physical systems, predict motion or energy changes, or solve physics problems';
+        }
+        if (subjectLower.includes('history')) {
+            return 'understand historical context, analyze causes and effects, or interpret historical significance';
+        }
+        if (topicLower.includes('law') || topicLower.includes('rule')) {
+            return 'apply consistent principles or guidelines to solve problems or make decisions';
+        }
+        if (topicLower.includes('process') || topicLower.includes('method')) {
+            return 'follow a systematic approach to accomplish a task or solve a problem';
+        }
+        
+        return 'apply this concept to solve problems or understand related topics in this subject';
+    }
+
+    generateRealisticDistractors(topicName, subject, keywords) {
+        const topicLower = topicName.toLowerCase();
+        const subjectLower = (subject || '').toLowerCase();
+        const distractors = {
+            definition: [],
+            application: []
+        };
+        
+        // Generate topic-specific distractors based on actual topic content
+        const topicSpecificDistractors = this.getTopicSpecificDistractors(topicName, subject);
+        
+        if (topicSpecificDistractors.definition.length > 0) {
+            distractors.definition = topicSpecificDistractors.definition;
+            distractors.application = topicSpecificDistractors.application;
+            return distractors;
+        }
+        
+        // Fallback to general distractors if no specific ones found
+        const definitionMisconceptions = [
+            `${topicName} is the same as ${this.getRelatedConcept(topicName, subject)} and can be used interchangeably.`,
+            `${topicName} only applies in theoretical situations and has no real-world relevance.`,
+            `${topicName} is a simple concept that doesn't require deep understanding, just memorization.`
+        ];
+        
+        const applicationMisconceptions = [
+            `You would use ${topicName} when working with ${this.getWrongContext(topicName, subject)}, which is incorrect.`,
+            `${topicName} should be used in all situations related to ${subject || 'this subject'}, regardless of context.`,
+            `${topicName} is only useful for advanced students and beginners should avoid it.`
+        ];
+        
+        // Customize based on topic type
+        if (topicLower.includes('law') || topicLower.includes('principle')) {
+            definitionMisconceptions[0] = `${topicName} is just a suggestion and doesn't always apply.`;
+            definitionMisconceptions[1] = `${topicName} only works in ideal conditions and never in real situations.`;
+        }
+        
+        if (topicLower.includes('theory')) {
+            definitionMisconceptions[0] = `${topicName} is just an opinion and not based on evidence.`;
+            definitionMisconceptions[1] = `${topicName} has been proven false and is no longer relevant.`;
+        }
+        
+        if (subjectLower.includes('math')) {
+            applicationMisconceptions[0] = `You would use ${topicName} for all types of calculations, even when simpler methods exist.`;
+            applicationMisconceptions[1] = `${topicName} is only needed for complex problems, never for basic calculations.`;
+        }
+        
+        distractors.definition = definitionMisconceptions;
+        distractors.application = applicationMisconceptions;
+        
+        return distractors;
+    }
+
+    getTopicSpecificDistractors(topicName, subject) {
+        const topicLower = topicName.toLowerCase();
+        const subjectLower = (subject || '').toLowerCase();
+        const distractors = {
+            definition: [],
+            application: []
+        };
+        
+        // Math-specific topics
+        if (subjectLower.includes('math') || subjectLower.includes('algebra') || subjectLower.includes('calculus')) {
+            // Slope-intercept form
+            if (topicLower.includes('slope') && topicLower.includes('intercept')) {
+                distractors.definition = [
+                    `${topicName} form (y = mx + b) is the same as point-slope form and can be used interchangeably.`,
+                    `In ${topicName} form, the slope (m) must always be positive and the y-intercept (b) must always be negative.`,
+                    `${topicName} form can only be used when you know both the slope and y-intercept, never with just one piece of information.`
+                ];
+                distractors.application = [
+                    `You would use ${topicName} form when you only know two points on a line, which requires converting to point-slope form first.`,
+                    `${topicName} form should be used for all linear equations, even when standard form (Ax + By = C) is more appropriate.`,
+                    `${topicName} form is only useful for graphing, never for solving systems of equations or finding intersections.`
+                ];
+                return distractors;
+            }
+            
+            // Quadratic formula
+            if (topicLower.includes('quadratic') && topicLower.includes('formula')) {
+                distractors.definition = [
+                    `The quadratic formula can only be used when the equation is already in standard form (ax² + bx + c = 0).`,
+                    `The quadratic formula always gives two real solutions, never imaginary or complex numbers.`,
+                    `The quadratic formula is the same as factoring and can be used interchangeably for all quadratic equations.`
+                ];
+                distractors.application = [
+                    `You would use the quadratic formula when the quadratic expression can be easily factored, which is inefficient.`,
+                    `The quadratic formula should be used for all polynomial equations, not just quadratics.`,
+                    `The quadratic formula is only needed when the discriminant is positive, never for negative discriminants.`
+                ];
+                return distractors;
+            }
+            
+            // Derivatives
+            if (topicLower.includes('derivative')) {
+                distractors.definition = [
+                    `A derivative represents the area under a curve, which is actually what an integral represents.`,
+                    `Derivatives can only be found for polynomial functions, not for trigonometric or exponential functions.`,
+                    `The derivative of a function at a point is the same as the function's value at that point.`
+                ];
+                distractors.application = [
+                    `You would use derivatives to find the area between curves, which requires integration instead.`,
+                    `Derivatives should be used to find the maximum or minimum values directly, without checking critical points.`,
+                    `Derivatives are only useful for finding rates of change, never for optimization problems.`
+                ];
+                return distractors;
+            }
+            
+            // Functions
+            if (topicLower.includes('function')) {
+                distractors.definition = [
+                    `A function is any relationship between two variables, even if one input gives multiple outputs.`,
+                    `Functions can only be represented as equations, never as graphs, tables, or mappings.`,
+                    `A function and a relation are the same thing and can be used interchangeably.`
+                ];
+                distractors.application = [
+                    `You would use functions to represent situations where one input can have multiple outputs, which violates the definition.`,
+                    `Functions should be used for all mathematical relationships, even non-functional ones.`,
+                    `Functions are only useful for linear relationships, never for quadratic, exponential, or other types.`
+                ];
+                return distractors;
+            }
+        }
+        
+        // Science-specific topics
+        if (subjectLower.includes('science') || subjectLower.includes('biology')) {
+            // Photosynthesis
+            if (topicLower.includes('photosynthesis')) {
+                distractors.definition = [
+                    `Photosynthesis is the process by which plants break down glucose to release energy, which is actually cellular respiration.`,
+                    `Photosynthesis only occurs in leaves, never in stems, roots, or other plant parts that contain chlorophyll.`,
+                    `Photosynthesis produces oxygen as a waste product that plants don't need, which is incorrect.`
+                ];
+                distractors.application = [
+                    `You would use photosynthesis to explain how plants get energy at night, when they actually use stored glucose.`,
+                    `Photosynthesis should be used to explain all plant processes, including growth and reproduction directly.`,
+                    `Photosynthesis is only relevant for green plants, never for algae or other photosynthetic organisms.`
+                ];
+                return distractors;
+            }
+        }
+        
+        // History-specific topics
+        if (subjectLower.includes('history')) {
+            // World War topics
+            if (topicLower.includes('world war') || topicLower.includes('ww')) {
+                distractors.definition = [
+                    `World War I and World War II had the same causes and can be studied as identical conflicts.`,
+                    `World War I was caused primarily by economic factors, ignoring the complex political and diplomatic causes.`,
+                    `World War II was inevitable from the start of World War I, which oversimplifies the historical timeline.`
+                ];
+                distractors.application = [
+                    `You would use World War causes to explain all modern conflicts, which ignores unique historical contexts.`,
+                    `World War analysis should focus only on military strategy, ignoring social, economic, and political impacts.`,
+                    `World War studies are only relevant for European history, never for understanding global developments.`
+                ];
+                return distractors;
+            }
+        }
+        
+        return { definition: [], application: [] };
+    }
+
+    getRelatedConcept(topicName, subject) {
+        // Return a related but different concept to create plausible confusion
+        const topicLower = topicName.toLowerCase();
+        const subjectLower = (subject || '').toLowerCase();
+        
+        if (topicLower.includes('law')) return 'a rule or guideline';
+        if (topicLower.includes('theory')) return 'a hypothesis';
+        if (topicLower.includes('process')) return 'a procedure';
+        if (topicLower.includes('function')) return 'a purpose';
+        if (topicLower.includes('structure')) return 'an organization';
+        
+        if (subjectLower.includes('math')) {
+            if (topicLower.includes('function')) return 'an equation';
+            if (topicLower.includes('equation')) return 'a formula';
+        }
+        
+        return 'a similar concept';
+    }
+
+    getWrongContext(topicName, subject) {
+        // Return a wrong context where the topic shouldn't be used
+        const subjectLower = (subject || '').toLowerCase();
+        
+        if (subjectLower.includes('math')) {
+            return 'qualitative analysis or non-numerical problems';
+        }
+        if (subjectLower.includes('science')) {
+            return 'mathematical proofs or abstract reasoning';
+        }
+        if (subjectLower.includes('history')) {
+            return 'scientific experiments or mathematical calculations';
+        }
+        
+        return 'unrelated subject areas';
+    }
+
+    generateSourceLinks(topic, subject) {
+        const topicEncoded = encodeURIComponent(topic);
+        const subjectLower = (subject || '').toLowerCase();
+        const sources = [];
+
+        // Wikipedia - always include
+        sources.push({
+            name: 'Wikipedia',
+            url: `https://en.wikipedia.org/wiki/${topicEncoded}`,
+            icon: 'fas fa-book',
+            description: 'Comprehensive overview and detailed information'
+        });
+
+        // Subject-specific sources
+        if (subjectLower.includes('math') || subjectLower.includes('calculus') || subjectLower.includes('algebra')) {
+            sources.push({
+                name: 'Khan Academy',
+                url: `https://www.khanacademy.org/search?page_search_query=${topicEncoded}`,
+                icon: 'fas fa-graduation-cap',
+                description: 'Video tutorials and practice exercises'
+            });
+            sources.push({
+                name: 'Wolfram MathWorld',
+                url: `https://mathworld.wolfram.com/search/?query=${topicEncoded}`,
+                icon: 'fas fa-calculator',
+                description: 'Mathematical definitions and examples'
+            });
+        }
+
+        if (subjectLower.includes('science') || subjectLower.includes('biology') || subjectLower.includes('chemistry') || subjectLower.includes('physics')) {
+            sources.push({
+                name: 'Khan Academy',
+                url: `https://www.khanacademy.org/search?page_search_query=${topicEncoded}`,
+                icon: 'fas fa-graduation-cap',
+                description: 'Video tutorials and interactive lessons'
+            });
+            sources.push({
+                name: 'Britannica',
+                url: `https://www.britannica.com/search?query=${topicEncoded}`,
+                icon: 'fas fa-globe',
+                description: 'Authoritative encyclopedia articles'
+            });
+        }
+
+        if (subjectLower.includes('history') || subjectLower.includes('social')) {
+            sources.push({
+                name: 'Britannica',
+                url: `https://www.britannica.com/search?query=${topicEncoded}`,
+                icon: 'fas fa-globe',
+                description: 'Historical context and detailed articles'
+            });
+        }
+
+        // General educational sources
+        sources.push({
+            name: 'Google Scholar',
+            url: `https://scholar.google.com/scholar?q=${topicEncoded}`,
+            icon: 'fas fa-search',
+            description: 'Academic papers and research articles'
+        });
+
+        sources.push({
+            name: 'YouTube Education',
+            url: `https://www.youtube.com/results?search_query=${topicEncoded}+explained`,
+            icon: 'fab fa-youtube',
+            description: 'Video explanations and tutorials'
+        });
+
+        return sources;
     }
 
     getSpecializedTemplates(topicName, subject, difficulty) {
@@ -717,39 +1205,88 @@ class StudyGuideGenerator {
 
     ensureMultipleChoice(template, topicName, subject) {
         if (template.type === 'multiple-choice' && template.options && template.options.length > 0) {
-            return template;
+            // Shuffle existing options and update correct answer index
+            const originalCorrectIndex = template.correctAnswer || 0;
+            const originalCorrectAnswer = template.options[originalCorrectIndex];
+            const shuffledOptions = this.shuffleArray([...template.options]);
+            const newCorrectIndex = shuffledOptions.indexOf(originalCorrectAnswer);
+            
+            return {
+                question: template.question,
+                type: 'multiple-choice',
+                options: shuffledOptions,
+                correctAnswer: newCorrectIndex >= 0 ? newCorrectIndex : 0,
+                explanation: template.explanation || originalCorrectAnswer
+            };
         }
 
         const correctText = template.answer || template.explanation || `Provide the accurate explanation for ${topicName}.`;
         const genericDistractors = this.generateGenericDistractors(topicName, subject, correctText);
 
+        // Create options array with correct answer first
+        const options = [correctText, ...genericDistractors];
+        
+        // Shuffle options and find new correct answer index
+        const shuffledOptions = this.shuffleArray(options);
+        const correctAnswerIndex = shuffledOptions.indexOf(correctText);
+
         return {
             question: template.question,
             type: 'multiple-choice',
-            options: [correctText, ...genericDistractors],
-            correctAnswer: 0,
+            options: shuffledOptions,
+            correctAnswer: correctAnswerIndex >= 0 ? correctAnswerIndex : 0,
             explanation: correctText
         };
     }
 
     generateGenericDistractors(topicName, subject, correctText) {
         const topicRef = topicName || 'the topic';
-        const baseDistractors = [
-            `An incomplete or vague description that leaves out key facts about ${topicRef}.`,
-            `A statement that contradicts the core principles of ${topicRef}.`,
-            `An answer that focuses on an unrelated concept instead of ${topicRef}.`,
-            `A memorized phrase that sounds similar but is inaccurate for ${topicRef}.`
-        ];
-
+        const topicLower = (topicName || '').toLowerCase();
+        const subjectLower = (subject || '').toLowerCase();
+        
+        // Generate more realistic distractors based on common misconceptions
+        const distractors = [];
+        
+        // Distractor 1: Oversimplification or missing key details
+        if (topicLower.includes('law') || topicLower.includes('principle')) {
+            distractors.push(`${topicRef} is optional and can be ignored in most situations.`);
+        } else if (topicLower.includes('theory')) {
+            distractors.push(`${topicRef} is just speculation without any supporting evidence.`);
+        } else if (topicLower.includes('process') || topicLower.includes('method')) {
+            distractors.push(`${topicRef} can be skipped or done in any order without affecting the result.`);
+        } else {
+            distractors.push(`A simplified explanation that misses important details about ${topicRef}.`);
+        }
+        
+        // Distractor 2: Confusion with related concepts
+        const relatedConcept = this.getRelatedConcept(topicName, subject);
+        distractors.push(`${topicRef} is essentially the same as ${relatedConcept}, which is incorrect.`);
+        
+        // Distractor 3: Wrong application or context
+        if (subjectLower.includes('math')) {
+            distractors.push(`${topicRef} is only used for theoretical problems and never in practical applications.`);
+        } else if (subjectLower.includes('science')) {
+            distractors.push(`${topicRef} applies to all scientific fields equally, regardless of context.`);
+        } else {
+            distractors.push(`An explanation that applies ${topicRef} incorrectly or in the wrong context.`);
+        }
+        
+        // Ensure we have exactly 3 unique distractors
         const uniqueDistractors = [];
-        for (let i = 0; i < baseDistractors.length && uniqueDistractors.length < 3; i++) {
-            if (!baseDistractors[i].includes(correctText)) {
-                uniqueDistractors.push(baseDistractors[i]);
+        for (let i = 0; i < distractors.length && uniqueDistractors.length < 3; i++) {
+            if (!distractors[i].includes(correctText) && !uniqueDistractors.includes(distractors[i])) {
+                uniqueDistractors.push(distractors[i]);
             }
         }
-
+        
+        // Fill remaining slots if needed
         while (uniqueDistractors.length < 3) {
-            uniqueDistractors.push(`An answer that does not accurately describe ${topicRef}.`);
+            const fallback = `A common misconception about ${topicRef} that many students believe.`;
+            if (!fallback.includes(correctText) && !uniqueDistractors.includes(fallback)) {
+                uniqueDistractors.push(fallback);
+            } else {
+                uniqueDistractors.push(`An incorrect understanding of ${topicRef} that doesn't match the actual definition.`);
+            }
         }
 
         return uniqueDistractors.slice(0, 3);
@@ -979,7 +1516,8 @@ class StudyGuideGenerator {
             details: this.generateDetails(topic, difficulty),
             examples: this.generateExamples(topic, difficulty),
             studyTips: this.generateStudyTips(topic, difficulty),
-            practiceQuestions: this.generatePracticeQuestions(topic, difficulty, this.subjectInput.value.trim())
+            practiceQuestions: this.generatePracticeQuestions(topic, difficulty, this.subjectInput.value.trim()),
+            sources: this.generateSourceLinks(topic, this.subjectInput.value.trim())
         };
 
         return content;
@@ -1026,7 +1564,8 @@ class StudyGuideGenerator {
                 'Memorize signs and their meanings'
             ],
             studyTips: tips || [],
-            practiceQuestions: practiceQuestions
+            practiceQuestions: practiceQuestions,
+            sources: this.generateSourceLinks(topicName, this.subjectInput ? this.subjectInput.value.trim() : '')
         };
     }
 
@@ -1179,7 +1718,15 @@ class StudyGuideGenerator {
             this.outputPanel.scrollIntoView({ behavior: 'smooth' });
             this.attachQuestionListeners(this.studyGuide);
             this.attachShowAnswerListeners(this.studyGuide);
+            
+            // Attach event listeners for interactive flashcards and quiz
+            this.attachInteractiveListeners();
         }
+    }
+    
+    attachInteractiveListeners() {
+        // This is now handled by attachFlashcardListeners and attachQuizListeners
+        // which are called directly from generateInteractiveFlashcards and generateQuiz
     }
     
     attachQuestionListeners(container) {
@@ -1234,20 +1781,21 @@ class StudyGuideGenerator {
         // Mark correct/incorrect
         if (clickedIndex === correctAnswerIndex) {
             clickedOption.classList.add('correct-answer');
+            // Don't show explanation if answer is correct
         } else {
             clickedOption.classList.add('wrong-answer');
             // Also highlight the correct answer in green
             correctAnswerOption.classList.add('correct-answer');
+            
+            // Show explanation only when answer is wrong
+            if (explanation) {
+                explanation.style.display = 'block';
+            }
         }
         
         // Show correct badge
         if (correctBadge) {
             correctBadge.style.display = 'inline-block';
-        }
-        
-        // Show explanation
-        if (explanation) {
-            explanation.style.display = 'block';
         }
     }
 
@@ -1396,6 +1944,24 @@ class StudyGuideGenerator {
                                 ${topic.examples.map(example => `<li>${example}</li>`).join('')}
                             </ul>
                         </div>
+                        
+                        ${topic.sources && topic.sources.length > 0 ? `
+                        <div class="sources-section">
+                            <p class="section-label"><strong>🔗 Learn More - Helpful Resources:</strong></p>
+                            <div class="sources-grid">
+                                ${topic.sources.map(source => `
+                                    <a href="${source.url}" target="_blank" rel="noopener noreferrer" class="source-link">
+                                        <i class="${source.icon}"></i>
+                                        <div class="source-content">
+                                            <strong>${source.name}</strong>
+                                            <span>${source.description}</span>
+                                        </div>
+                                        <i class="fas fa-external-link-alt source-external"></i>
+                                    </a>
+                                `).join('')}
+                            </div>
+                        </div>
+                        ` : ''}
                     </div>
                 </div>
             `;
@@ -1415,28 +1981,61 @@ class StudyGuideGenerator {
     }
 
     printStudyGuide() {
+        // If modal is open, print that; otherwise print the page
+        if (this.studyModal && this.studyModal.style.display !== 'none') {
+            // Close modal temporarily, print, then reopen
+            const wasOpen = true;
         window.print();
+        } else {
+            window.print();
+        }
         this.showNotification('Print dialog opened!', 'success');
     }
 
     exportToPDF() {
+        // Get content from modal if it's open, otherwise from output panel
+        let studyGuideContent;
+        if (this.studyModal.style.display !== 'none' && this.modalContent) {
+            studyGuideContent = this.modalContent.innerHTML;
+        } else if (this.studyGuide) {
+            studyGuideContent = this.studyGuide.innerHTML;
+        } else {
+            this.showNotification('No study guide to export', 'error');
+            return;
+        }
+        
         // Simple PDF export using browser's print functionality
         const printWindow = window.open('', '_blank');
-        const studyGuideContent = this.studyGuide.innerHTML;
+        if (!printWindow) {
+            this.showNotification('Please allow popups to export PDF', 'error');
+            return;
+        }
+        
+        const subject = this.subjectInput ? this.subjectInput.value : 'Study Guide';
         
         printWindow.document.write(`
             <!DOCTYPE html>
             <html>
             <head>
-                <title>Study Guide - ${this.subjectInput.value}</title>
+                <title>Study Guide - ${subject}</title>
                 <style>
-                    body { font-family: Arial, sans-serif; margin: 20px; }
+                    body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
                     .study-guide-header { text-align: center; margin-bottom: 30px; }
-                    .study-guide-title { font-size: 24px; color: #333; }
-                    .section-title { font-size: 18px; color: #333; margin-top: 20px; }
-                    .topic-card { margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; }
-                    .topic-title { font-size: 16px; font-weight: bold; }
-                    ul { margin-left: 20px; }
+                    .study-guide-title { font-size: 24px; color: #333; font-weight: bold; }
+                    .study-guide-subtitle { color: #666; margin-top: 10px; }
+                    .section-title { font-size: 18px; color: #333; margin-top: 30px; margin-bottom: 15px; border-bottom: 2px solid #ddd; padding-bottom: 5px; }
+                    .topic-card { margin-bottom: 25px; padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
+                    .topic-title { font-size: 16px; font-weight: bold; color: #333; margin-bottom: 10px; }
+                    ul { margin-left: 20px; margin-top: 10px; }
+                    li { margin-bottom: 5px; }
+                    .practice-question { margin: 15px 0; padding: 10px; background: #f9f9f9; border-radius: 5px; }
+                    .question-text { font-weight: bold; margin-bottom: 10px; }
+                    .mcq-option { margin: 5px 0; padding: 5px; }
+                    .answer-box { background: #e8f4f8; padding: 10px; border-radius: 5px; margin-top: 10px; }
+                    @media print {
+                        body { margin: 0; }
+                        .topic-card { page-break-inside: avoid; }
+                    }
                 </style>
             </head>
             <body>
@@ -1446,17 +2045,46 @@ class StudyGuideGenerator {
         `);
         
         printWindow.document.close();
+        setTimeout(() => {
         printWindow.print();
+        }, 250);
         this.showNotification('PDF export initiated!', 'success');
     }
 
     async copyToClipboard() {
         try {
-            const textContent = this.studyGuide.innerText;
+            // Get content from modal if it's open, otherwise from output panel
+            let textContent;
+            if (this.studyModal.style.display !== 'none' && this.modalContent) {
+                textContent = this.modalContent.innerText;
+            } else if (this.studyGuide) {
+                textContent = this.studyGuide.innerText;
+            } else {
+                this.showNotification('No study guide to copy', 'error');
+                return;
+            }
+            
+            if (!textContent || textContent.trim() === '') {
+                this.showNotification('No content to copy', 'error');
+                return;
+            }
+            
             await navigator.clipboard.writeText(textContent);
             this.showNotification('Study guide copied to clipboard!', 'success');
         } catch (error) {
-            this.showNotification('Failed to copy to clipboard', 'error');
+            console.error('Copy error:', error);
+            // Fallback for older browsers
+            try {
+                const textArea = document.createElement('textarea');
+                textArea.value = this.studyGuide ? this.studyGuide.innerText : '';
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                this.showNotification('Study guide copied to clipboard!', 'success');
+            } catch (fallbackError) {
+                this.showNotification('Failed to copy to clipboard. Please select and copy manually.', 'error');
+            }
         }
     }
 
@@ -1538,7 +2166,40 @@ class StudyGuideGenerator {
         html += this.createInteractiveFlashcard(topics[0], 0, topics.length);
         html += '</div>';
         
+        // Attach event listeners after a short delay to ensure DOM is ready
+        setTimeout(() => {
+            this.attachFlashcardListeners();
+        }, 100);
+        
         return html;
+    }
+    
+    attachFlashcardListeners() {
+        const container = document.querySelector('.interactive-flashcard-container');
+        if (!container) return;
+        
+        // Flashcard flip on click
+        const flashcard = container.querySelector('.interactive-flashcard');
+        if (flashcard) {
+            flashcard.addEventListener('click', () => {
+                flashcard.classList.toggle('flipped');
+            });
+        }
+        
+        // Navigation buttons
+        const prevBtn = container.querySelector('.flashcard-btn[data-action="prev"]');
+        const nextBtn = container.querySelector('.flashcard-btn[data-action="next"]');
+        const flipBtn = container.querySelector('.flashcard-btn[data-action="flip"]');
+        
+        if (prevBtn) {
+            prevBtn.addEventListener('click', () => this.previousFlashcard());
+        }
+        if (nextBtn) {
+            nextBtn.addEventListener('click', () => this.nextFlashcard());
+        }
+        if (flipBtn) {
+            flipBtn.addEventListener('click', () => this.flipFlashcard());
+        }
     }
 
     createInteractiveFlashcard(topic, index, total) {
@@ -1546,7 +2207,7 @@ class StudyGuideGenerator {
         const answer = this.generateFlashcardAnswer(topic);
         
         return `
-            <div class="interactive-flashcard" id="flashcard-${index}" onclick="this.classList.toggle('flipped')">
+            <div class="interactive-flashcard" id="flashcard-${index}" data-flashcard-index="${index}">
                 <div class="flashcard-face flashcard-front">
                     <div class="flashcard-question">${question}</div>
                 </div>
@@ -1556,15 +2217,15 @@ class StudyGuideGenerator {
             </div>
             <div class="flashcard-controls">
                 <div class="flashcard-nav">
-                    <button class="flashcard-btn" onclick="studyGuideGenerator.previousFlashcard()" ${index === 0 ? 'disabled' : ''}>
+                    <button class="flashcard-btn" data-action="prev" ${index === 0 ? 'disabled' : ''}>
                         <i class="fas fa-chevron-left"></i> Previous
                     </button>
                     <div class="flashcard-progress">${index + 1} of ${total}</div>
-                    <button class="flashcard-btn" onclick="studyGuideGenerator.nextFlashcard()" ${index === total - 1 ? 'disabled' : ''}>
+                    <button class="flashcard-btn" data-action="next" ${index === total - 1 ? 'disabled' : ''}>
                         Next <i class="fas fa-chevron-right"></i>
                     </button>
                 </div>
-                <button class="flashcard-btn flashcard-flip-btn" onclick="studyGuideGenerator.flipFlashcard()">
+                <button class="flashcard-btn flashcard-flip-btn" data-action="flip">
                     <i class="fas fa-sync-alt"></i> Flip Card
                 </button>
             </div>
@@ -1637,6 +2298,11 @@ class StudyGuideGenerator {
         html += this.createQuizHeader();
         html += this.createQuizQuestion(this.quizQuestions[0], 0);
         html += '</div>';
+        
+        // Attach event listeners after a short delay to ensure DOM is ready
+        setTimeout(() => {
+            this.attachQuizListeners();
+        }, 100);
         
         return html;
     }
@@ -1742,7 +2408,7 @@ class StudyGuideGenerator {
                 <div class="question-text">${question.question}</div>
                 <div class="quiz-options">
                     ${question.options.map((option, i) => `
-                        <div class="quiz-option" onclick="studyGuideGenerator.selectAnswer(${index}, ${i})">
+                        <div class="quiz-option" data-question-index="${index}" data-option-index="${i}">
                             <div class="option-letter">${letters[i]}</div>
                             <div>${option}</div>
                         </div>
@@ -1755,12 +2421,40 @@ class StudyGuideGenerator {
                             <div class="progress-fill" style="width: ${((index + 1) / this.quizQuestions.length) * 100}%"></div>
                         </div>
                     </div>
-                    <button class="btn btn-primary" onclick="studyGuideGenerator.nextQuizQuestion()" ${index === this.quizQuestions.length - 1 ? 'onclick="studyGuideGenerator.finishQuiz()"' : ''}>
+                    <button class="btn btn-primary" data-quiz-action="${index === this.quizQuestions.length - 1 ? 'finish' : 'next'}">
                         ${index === this.quizQuestions.length - 1 ? 'Finish Quiz' : 'Next Question'}
                     </button>
                 </div>
             </div>
         `;
+    }
+    
+    attachQuizListeners() {
+        const container = document.querySelector('.quiz-container');
+        if (!container) return;
+        
+        // Quiz option selection
+        const quizOptions = container.querySelectorAll('.quiz-option');
+        quizOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                const questionIndex = parseInt(option.getAttribute('data-question-index'));
+                const optionIndex = parseInt(option.getAttribute('data-option-index'));
+                this.selectAnswer(questionIndex, optionIndex);
+            });
+        });
+        
+        // Next/Finish button
+        const actionBtn = container.querySelector('.btn-primary[data-quiz-action]');
+        if (actionBtn) {
+            actionBtn.addEventListener('click', () => {
+                const action = actionBtn.getAttribute('data-quiz-action');
+                if (action === 'finish') {
+                    this.finishQuiz();
+                } else {
+                    this.nextQuizQuestion();
+                }
+            });
+        }
     }
 
     selectAnswer(questionIndex, optionIndex) {
@@ -1789,6 +2483,10 @@ class StudyGuideGenerator {
             const header = this.createQuizHeader();
             const question = this.createQuizQuestion(this.quizQuestions[this.currentQuizQuestion], this.currentQuizQuestion);
             container.innerHTML = header + question;
+            // Reattach listeners after updating
+            setTimeout(() => {
+                this.attachQuizListeners();
+            }, 50);
         }
     }
 
@@ -1855,11 +2553,17 @@ class StudyGuideGenerator {
                         <div class="breakdown-label">Total Questions</div>
                     </div>
                 </div>
-                <button class="btn btn-primary" onclick="studyGuideGenerator.restartInteractive()">
+                <button class="btn btn-primary" data-action="restart-quiz">
                     <i class="fas fa-redo"></i> Try Again
                 </button>
             </div>
         `;
+        
+        // Attach restart button listener
+        const restartBtn = container.querySelector('.btn-primary[data-action="restart-quiz"]');
+        if (restartBtn) {
+            restartBtn.addEventListener('click', () => this.restartInteractive());
+        }
     }
 
     restartInteractive() {
@@ -1942,6 +2646,10 @@ class StudyGuideGenerator {
         }
 
         if (targetElement) {
+            // Reset card position first to prevent accumulation
+            this.tutorialCard.style.top = '';
+            this.tutorialCard.style.bottom = '2rem';
+            
             // Scroll to element if needed
             if (step.scrollTo) {
                 setTimeout(() => {
@@ -1949,10 +2657,10 @@ class StudyGuideGenerator {
                 }, 100);
             }
 
-            // Position highlight box
+            // Position highlight box with a slight delay to ensure scroll completes
             setTimeout(() => {
                 this.positionHighlight(targetElement);
-            }, step.scrollTo ? 500 : 100);
+            }, step.scrollTo ? 600 : 150);
         }
     }
 
@@ -1977,18 +2685,33 @@ class StudyGuideGenerator {
         this.tutorialHighlight.style.height = `${height}px`;
 
         // Position tutorial card relative to highlight (using viewport coordinates for fixed positioning)
+        // Always reset both properties first to prevent accumulation
+        this.tutorialCard.style.top = '';
+        this.tutorialCard.style.bottom = '';
+        
         const highlightBottom = rect.bottom; // Already viewport-relative
+        const highlightTop = rect.top;
         const spaceBelow = window.innerHeight - highlightBottom;
-        const spaceAbove = rect.top;
+        const spaceAbove = highlightTop;
         const cardHeight = 300; // Approximate card height
+        const spacing = 20;
 
         // Position card below if there's space, otherwise above
-        if (spaceBelow > cardHeight + 20 || spaceBelow > spaceAbove) {
-            this.tutorialCard.style.bottom = 'auto';
-            this.tutorialCard.style.top = `${highlightBottom + 20}px`;
+        if (spaceBelow > cardHeight + spacing || spaceBelow > spaceAbove) {
+            // Position below the highlight
+            const topPosition = highlightBottom + spacing;
+            // Ensure it doesn't go off screen
+            const maxTop = window.innerHeight - cardHeight - spacing;
+            this.tutorialCard.style.top = `${Math.min(topPosition, maxTop)}px`;
+            this.tutorialCard.style.bottom = '';
         } else {
-            this.tutorialCard.style.top = 'auto';
-            this.tutorialCard.style.bottom = `${window.innerHeight - rect.top + 20}px`;
+            // Position above the highlight
+            // Calculate bottom position: distance from bottom of viewport to top of highlight, minus spacing
+            const bottomPosition = window.innerHeight - highlightTop + spacing;
+            // Ensure it doesn't go off screen (minimum bottom position)
+            const minBottom = spacing;
+            this.tutorialCard.style.bottom = `${Math.max(bottomPosition, minBottom)}px`;
+            this.tutorialCard.style.top = '';
         }
     }
 }
